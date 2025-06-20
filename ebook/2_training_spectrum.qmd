@@ -1,0 +1,16 @@
+
+---
+output: html_document
+editor-options: 
+  chunk-output-type: console
+---
+
+# Estimating the five fairness premiums {#sec-training}
+
+:::{.callout-note}
+
+## Objectives
+
+Building on the simulations in @sec-simul-dataset, this section estimates the spectrum of fairness. It complements Section 4.2 of the **main paper**, linked from the supplement’s introduction. We recommend keeping the main paper nearby, as this supplement focuses exclusively on implementation.
+
+:::

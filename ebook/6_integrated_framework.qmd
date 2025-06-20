@@ -1,0 +1,15 @@
+
+---
+output: html_document
+editor-options: 
+  chunk-output-type: console
+---
+
+# Integrated framework {#sec-integrated}
+
+:::{.callout-note}
+
+## Objectives
+
+
+:::

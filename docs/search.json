@@ -1,0 +1,92 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "A scalable toolbox for exposing indirect discrimination in insurance rates",
+    "section": "",
+    "text": "Introduction\nThis online supplement provides code and reproducible examples for the article titled ‘A scalable toolbox for exposing indirect discrimination in insurance rates.’",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "index.html#executive-summary",
+    "href": "index.html#executive-summary",
+    "title": "A scalable toolbox for exposing indirect discrimination in insurance rates",
+    "section": "Executive summary",
+    "text": "Executive summary",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "index.html#outline",
+    "href": "index.html#outline",
+    "title": "A scalable toolbox for exposing indirect discrimination in insurance rates",
+    "section": "Outline",
+    "text": "Outline\nThis ebook contains three chapters:\n\nChapter 1  Example setup and simulations: Presentation of the three scenarios for the simulated example.\nChapter 2  Estimating the five fairness premiums: Estimating the spectrum from simulations.\nChapter 3  Dimensions of fairness: Illustration of the dimensions of fairness.\nChapter 4  Actuarial local metrics: Local metrics of fairness\nChapter 5  Partitioning: Presentation of the three scenarios for the simulated example.\nChapter 6  Integrated framework: Estimating the spectrum from simulations.",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "1_simul_dataset.html",
+    "href": "1_simul_dataset.html",
+    "title": "1  Example setup and simulations",
+    "section": "",
+    "text": "Objectives\n\n\n\nThis section introduces the setup of a simulated example with three scenarios. We compute theoretical values for the five premium benchmarks, visualize them to aid interpretation, and simulate data for use in subsequent sections.\nThis material complements Section 4.1 of the main paper, linked from the supplement’s introduction.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Example setup and simulations</span>"
+    ]
+  },
+  {
+    "objectID": "2_training_spectrum.html",
+    "href": "2_training_spectrum.html",
+    "title": "2  Estimating the five fairness premiums",
+    "section": "",
+    "text": "Objectives\n\n\n\nBuilding on the simulations in Chapter 1, this section estimates the spectrum of fairness. It complements Section 4.2 of the main paper, linked from the supplement’s introduction. We recommend keeping the main paper nearby, as this supplement focuses exclusively on implementation.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Estimating the five fairness premiums</span>"
+    ]
+  },
+  {
+    "objectID": "4_local.html",
+    "href": "4_local.html",
+    "title": "4  Actuarial local metrics",
+    "section": "",
+    "text": "Note",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Actuarial local metrics</span>"
+    ]
+  },
+  {
+    "objectID": "5_partitioning.html",
+    "href": "5_partitioning.html",
+    "title": "5  Partitioning",
+    "section": "",
+    "text": "Objectives",
+    "crumbs": [
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Partitioning</span>"
+    ]
+  },
+  {
+    "objectID": "3_dimensions.html",
+    "href": "3_dimensions.html",
+    "title": "3  Dimensions of fairness",
+    "section": "",
+    "text": "Objectives",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Dimensions of fairness</span>"
+    ]
+  },
+  {
+    "objectID": "6_integrated_framework.html",
+    "href": "6_integrated_framework.html",
+    "title": "6  Integrated framework",
+    "section": "",
+    "text": "Objectives",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Integrated framework</span>"
+    ]
+  }
+]

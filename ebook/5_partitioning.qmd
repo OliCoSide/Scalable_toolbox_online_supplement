@@ -1,0 +1,16 @@
+
+---
+output: html_document
+editor-options: 
+  chunk-output-type: console
+---
+
+# Partitioning {#sec-partition}
+
+:::{.callout-note}
+
+## Objectives
+
+
+:::
+

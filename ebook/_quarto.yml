@@ -1,0 +1,50 @@
+project:
+  type: book
+  output-dir: ../docs
+
+book:
+  title: "A scalable toolbox for exposing indirect discrimination in insurance rates"
+  author:
+  - name: Olivier Côté
+    orcid: 0009-0000-5632-3472
+    affiliations:
+      - name: École d'actuariat de l'Université Laval
+  - name: Marie-Pier Côté
+    orcid: 0000-0003-0383-1689
+    affiliations:
+      - name: École d'actuariat de l'Université Laval
+  - name: Arthur Charpentier
+    orcid: 0000-0003-3654-6286
+    affiliations:
+      - name: Université du Québec à Montréal
+  date: "01/26/2025"
+  chapters:
+    - index.qmd
+    - 1_simul_dataset.qmd
+    - 2_training_spectrum.qmd
+    - 3_dimensions.qmd
+    - 4_local.qmd
+    - 5_partitioning.qmd
+    - 6_integrated_framework.qmd
+    - 9_references.qmd
+  navbar:
+    right:
+      - icon: github
+        href: https://github.com/olicoside/CAS_scalable_toolbox_suppl
+        aria-label: GitHub
+
+bibliography: ./biblio.bib
+
+fig-cap-location: top
+
+format:
+  html:
+    theme: litera
+    html-math-method: mathjax
+    include-in-header:
+    - file: mathjax-color.html
+
+filters:
+  - pseudocode
+
+editor: source

@@ -1,0 +1,53 @@
+# Introduction {.unnumbered}
+
+This online supplement provides code and reproducible examples for the article titled *'A scalable toolbox for exposing indirect discrimination in insurance rates.'*
+
+:::{.callout-important}
+
+## Paper on TBD
+
+The paper is available on TBD:
+ 
+[![](img/logo_cas.png){width=25px}     Pre-print submitted to the CAS reasearch paper series on race and insurance pricing](https://www.casact.org/publications-research/research/research-paper-series-race-and-insurance-pricing)
+
+:::
+
+:::{.callout-note}
+All the codes are written in R.
+:::
+
+:::{.callout-note}
+
+## Scripts
+
+The {{< fa brands r-project >}} scripts associated with this online supplement are available in the ebook folder on the GitHub repository of this paper: 
+
+{{< fa brands github >}} <https://github.com/olicoside/Scalable_toolbox_online_supplement>
+
+:::
+
+
+
+## Executive summary
+
+
+## Outline
+
+This ebook contains three chapters:
+
+1. [Chapter -@sec-simul-dataset]: Presentation of the three scenarios for the simulated example.
+2. [Chapter -@sec-training]: Estimating the spectrum from simulations.
+3. [Chapter -@sec-dim]: Illustration of the dimensions of fairness.
+4. [Chapter -@sec-local]: Local metrics of fairness
+5. [Chapter -@sec-partition]: Presentation of the three scenarios for the simulated example.
+6. [Chapter -@sec-integrated]: Estimating the spectrum from simulations.
+
+
+
+
+
+```{r, eval=FALSE, echo=FALSE}
+# extensions (run in the terminal)
+quarto add leovan/quarto-pseudocode
+```
+
