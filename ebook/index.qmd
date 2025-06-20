@@ -8,7 +8,7 @@ This online supplement provides code and reproducible examples for the article t
 
 The paper is available on TBD:
  
-[![](img/logo_cas.png){width=25px}     Pre-print submitted to the CAS reasearch paper series on race and insurance pricing](https://www.casact.org/publications-research/research/research-paper-series-race-and-insurance-pricing)
+[Pre-print submitted to the CAS reasearch paper series on race and insurance pricing](https://www.casact.org/publications-research/research/research-paper-series-race-and-insurance-pricing)
 
 :::
 
