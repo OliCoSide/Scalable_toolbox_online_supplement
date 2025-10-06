@@ -1,10 +1,7 @@
-
 ---
 output: html_document
 editor-options: 
   chunk-output-type: console
-editor_options: 
-  chunk_output_type: console
 ---
 
 # Actuarial local metrics {#sec-local}

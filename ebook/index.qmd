@@ -2,18 +2,8 @@
 
 This online supplement provides code and reproducible examples for the article titled *'A scalable toolbox for exposing indirect discrimination in insurance rates.'*
 
-:::{.callout-important}
-
-## Paper on TBD
-
-The paper is available on TBD:
-
-{{< ai arxiv >}}  <https://arxiv.org/abs/2501.15549>
-
-:::
-
 :::{.callout-note}
-All the codes are written in R.
+Codes are written both in R and Python.
 :::
 
 :::{.callout-note}
@@ -69,9 +59,6 @@ This online supplement contains six chapters:
   - @sec-local: Derives pre- and post-pricing fairness metrics, including proxy vulnerability.
   - @sec-partition: Identifies systemic unfairness via partitioning, with repeated experiments.
   - @sec-integrated: Presents a unified approach for fairness assessment and monitoring.
-
-
-
 
 
 ```{r, eval=FALSE, echo=FALSE}
