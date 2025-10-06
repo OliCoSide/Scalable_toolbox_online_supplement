@@ -45,8 +45,8 @@ In this paper, we focus on fairness in actuarial pricing. We study the situation
     * The **best-estimate** premium is the most accurate predictor of losses using all available information, including the sensitive variable,
     * The **unaware** premium is the most accurate predictor of losses using all information except the sensitive variable,
     * The **aware** premium is the most accurate predictor of losses when controlling for the sensitive variable,
-    * The **hyperaware** premium is the most accurate approximation of the corrective premium that does not directly discriminate on the sensitive variable,
     * The **corrective** premium is the most accurate predictor that enforces similar premium distributions across levels of the sensitive variable. 
+    * The **hyperaware** premium is the most accurate approximation of the corrective premium that does not directly discriminate on the sensitive variable,
   - We define actuarially relevant local metrics that quantify the monetary impact of unfairness at the policyholder level.
     * Proxy vulnerability is the difference between unaware and aware premiums. It locally measures how much the allowed variables pick up the signal of a missing sensitive variable.
   - We define post pricing local metrics to evaluate the fairness of any pricing structure relative to the estimated spectrum.
@@ -63,12 +63,12 @@ Designed for routine portfolio monitoring, our toolbox delivers valuable insight
 
 This online supplement contains six chapters:
 
-    - @sec-simul-dataset: Defines the three scenarios and their simulation setup.
-    - @sec-training: Describes how to estimate the premium spectrum from simulated data.
-    - @sec-dim: Measures and visualizes the three fairness dimensions.
-    - @sec-local: Derives pre- and post-pricing fairness metrics, including proxy vulnerability.
-    - @sec-partition: Identifies systemic unfairness via partitioning, with repeated experiments.
-    - @sec-integrated: Presents a unified approach for fairness assessment and monitoring.
+  - @sec-simul-dataset: Defines the three scenarios and their simulation setup.
+  - @sec-training: Describes how to estimate the premium spectrum from simulated data.
+  - @sec-dim: Measures and visualizes the three fairness dimensions.
+  - @sec-local: Derives pre- and post-pricing fairness metrics, including proxy vulnerability.
+  - @sec-partition: Identifies systemic unfairness via partitioning, with repeated experiments.
+  - @sec-integrated: Presents a unified approach for fairness assessment and monitoring.
 
 
 
