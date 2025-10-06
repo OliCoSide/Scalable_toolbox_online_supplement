@@ -10,7 +10,7 @@ editor-options:
 
 ## Objectives
 
-Building on the simulations in @sec-simul-dataset, this section estimates the spectrum of fairness. It complements Section 4.2 of the **main paper**, linked from the supplement’s introduction. We recommend keeping the main paper nearby, as this supplement focuses exclusively on implementation.
+Building on the simulations in @sec-simul-dataset, this section estimates the spectrum of fairness. It complements Section 4.3 of the **main paper**, linked from the supplement’s introduction. We recommend keeping the main paper nearby, as this supplement focuses exclusively on implementation.
 
 :::
 
@@ -201,6 +201,13 @@ In what follows, we detail how we estimate each benchmark premium in our framewo
 ## Best-estimate premium {#sec-est_best}
 
 The **best estimate premium** $\widehat{\mu}^B(\mathbf{x}, d)$ serves as the anchor. Thus, its estimation is crucial for our framework. It provides the best predictor of the response variable $Y$ when differentiating risks based on $(X, D)$. It can be derived from indicated rates or data-driven (what we do) estimates as detailed in Complement 5 of the **main paper**.  
+
+::: {.column-margin}
+::: {.related-box}
+**Related section**  
+The estimation strategy for the five families of fair premium is described in **Section 4.3 of the main paper**.
+:::
+:::
 
 ```{r best-train}
 #| code-fold: true

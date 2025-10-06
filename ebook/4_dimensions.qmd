@@ -75,7 +75,21 @@ wasserstein_by_group <- function(values, group) {
 
 In the case study of the **main paper**, we briefly discuss how we quantified disparities using the wasserstein distance. We briefly discuss technical limitations in the measurement of the different disparities regarding the three dimensions of fairness: *actuarial fairness*, *solidarity*, and *causality*. 
 
+::: {.column-margin}
+::: {.related-box}
+**Related section**  
+The dimensions of fairness are described in **Section 3 of the main paper**.
+:::
+:::
+
 ## Measuring actuarial fairness disparities
+
+::: {.column-margin}
+::: {.related-box}
+**Related section**  
+The measurement associated with the dimensions of fairness are described in **Section 4.3 of the main paper**.
+:::
+:::
 
 Actuarial fairness concerns differences in expected loss ratios. Disparity implies cross-subsidies; a violation of actuarial fairness. We compute individual loss ratios as
 

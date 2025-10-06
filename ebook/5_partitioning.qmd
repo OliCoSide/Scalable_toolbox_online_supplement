@@ -10,7 +10,7 @@ editor-options:
 
 ## Objectives
 
-In order to expose systemic disparities, section 6 of the **main paper** propose to partition policyholders following a relevant fairness local metric. In this section, we aim to perform partitioning of policyholders following proxy vulnerability (section 6.1 of the **main paper**) and following commercial loading (section 6.2 of the **main paper**). 
+In order to expose systemic disparities, section 6 of the **main paper** propose to partition policyholders following a relevant fairness local metric. In this section, we aim to perform partitioning of policyholders following proxy vulnerability (section 6.1 of the **main paper**). 
 
 Furthermore, we perform an experiment on *Scenario 1* to see how effective is partitioning in identifying high proxy vulnerability policyholders. We gain insight on best practices for partitioning through this repeated partitioning experiment. 
 
@@ -371,6 +371,12 @@ simplify_path <- function(path_conditions, round_digits = NULL) {
 
 ## Supervised partitioning for fairness insights
 
+::: {.column-margin}
+::: {.related-box}
+**Related section**  
+The partitioning methodology is introduced in **Section 6 of the main paper**.
+:::
+:::
 
 Five essential components guide supervised partitions:
   - The **data** should represent the population for which fairness is intended, whether the full portfolio, a representative sample, or a specific subpopulation   - The **partitioning feature space** might include allowed and sensitive variables to reveal ``minorities within minorities''. Alternatively, focusing on permissible variables ensures future usability, even if sensitive attributes become inaccessible. 
@@ -379,7 +385,14 @@ Five essential components guide supervised partitions:
   - The **algorithm** implements the partitioning. While CART is fast, it is only locally optimal. Advanced options like evolutionary trees (`evtree` in R; @grubinger/al:2014) or OSRT @Lin/al:2022_tree aim for global optimality while preserving tractability.
 \end{itemize}
 
-## Partitioning policyholders following Proxy vulnerability
+## Partitioning policyholders following proxy vulnerability
+
+::: {.column-margin}
+::: {.related-box}
+**Related section**  
+Pre-pricing partitioning is illustrated in **Section 6.1 of the main paper**.
+:::
+:::
 
 We apply an optimal partitioning algorithm, `evtree`  from @grubinger/al:2014, to policyholders based on proxy vulnerability in the three scenarios of the example. We use $(X_1, X_2)$ as the feature space for partitioning and impose strong regularization to limit the number of groups.
 
@@ -420,11 +433,6 @@ my_trees <- process_populations(preds_pop_stats = pregroup_pop_stats_small,
                                 output_dir)
 ```
 
-::: {.column-margin}
-
-testing... 
-
-:::
 
 ```{r viz-proxy-tree}
 #| code-fold: true

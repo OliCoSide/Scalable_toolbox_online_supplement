@@ -60,6 +60,12 @@ This online supplement contains six chapters:
   - @sec-partition: Identifies systemic unfairness via partitioning, with repeated experiments.
   - @sec-integrated: Presents a unified approach for fairness assessment and monitoring.
 
+::: {.column-margin}
+::: {.related-box}
+**Related section**  
+This sidebar links to the corresponding section of the main paper.
+:::
+:::
 
 ```{r, eval=FALSE, echo=FALSE}
 # extensions (run in the terminal)

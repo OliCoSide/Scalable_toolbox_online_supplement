@@ -51,6 +51,13 @@ the_CAS_colors <- c('#FED35D', '#F89708', '#205ED5', '#142345')
 
 ## Pre pricing local metrics
 
+::: {.column-margin}
+::: {.related-box}
+**Related section**  
+The pre-pricing local metrics are described in **Section 5.1 of the main paper**.
+:::
+:::
+
 Pursuing our simple example with three scenarios, we can dissect proxy vulnerability using its two key components: the risk spread and propensity. With constant risk spread (scenario 1, top on @fig-proxy_dissect_t), the shape of proxy vulnerability depends solely on the propensity function. Scenario 1 yields eight distinct values of proxy vulnerability, as the constant risk spread limits variation to the eight possible values of propensity.
 
 With a variable risk spread (scenario 2, middle of @fig-proxy_dissect_t), proxy vulnerability takes continuous values, even if the propensity has a finite number of values. As $X_1$ increases, the proxy vulnerability moves further away from zero. Its sign depends on whether $P(D = 1 \mid \mathbf{X} = \mathbf{x})$ exceeds its unconditional counterpart (which happens for $x_1 > 1$).
@@ -252,6 +259,13 @@ ggsave(filename = "figs/graph_proxy_dissect_perpop.png",
 ![Risk spread (top left) and propensity (bottom left) are the components of the estimated proxy vulnerability (right panel) for the three scenarios (vertical blocks) of the exampe.](figs/graph_proxy_dissect_perpop.png){#fig-proxy_dissect width=100%}
 
 ## Post pricing local metrics
+
+::: {.column-margin}
+::: {.related-box}
+**Related section**  
+The post-pricing local metrics are described in **Section 5.2 of the main paper**.
+:::
+:::
 
 Given a commercial price, one may leverage the spectrum of fairness to better grasp the farness implication of the commercial price. We start by constructing a fictive commercial price to illustrate. 
 

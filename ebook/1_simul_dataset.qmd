@@ -723,6 +723,12 @@ ggsave(filename = "figs/graph_premiumsdense_BUA_t_perpop.png",
        device = "png", dpi = 500)
 ```
 
+::: {.column-margin}
+::: {.related-box}
+**Related section**  
+The five families of the Spectrum of fairness are described in **Section 4.2 of the main paper**
+:::
+:::
 
 
 ![Best-estimate $\mu^B$ (red), unaware $\mu^U$ (orange), and aware $\mu^A$ (green) premiums for scenarios 1, 2, and 3 in the Example as a function of $x_1$, $x_2$, and $d$.](figs/graph_premiumsdense_BUA_t_perpop.png){#fig-premiums_BUA width=100%}
