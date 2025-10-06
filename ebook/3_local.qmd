@@ -1,0 +1,872 @@
+
+---
+output: html_document
+editor-options: 
+  chunk-output-type: console
+editor_options: 
+  chunk_output_type: console
+---
+
+# Actuarial local metrics {#sec-local}
+
+:::{.callout-note}
+
+## Objectives
+
+We briefly discuss and illustrate some local metrics that were not deeply discussed in the paper. 
+
+:::
+
+```{r load-packages}
+#| code-fold: true
+#| code-summary: Packages for this section
+#| warning: false
+library(tidyverse)
+library(latex2exp)
+library(jsonlite)
+
+```
+
+```{r load-data}
+#| code-fold: true
+#| code-summary: Data for this section
+#| warning: false
+#| message: false
+
+
+preds_pop_stats <- fromJSON('preds/preds_pop_stats.json') 
+preds_grid_stats <- fromJSON('preds/preds_grid_stats.json')
+
+sims <- fromJSON('simuls/train_scenarios.json')
+valid <-  fromJSON('simuls/valid_scenarios.json')
+test <- fromJSON('simuls/test_scenarios.json')
+
+```
+
+```{r load-fn-obj}
+#| code-fold: true
+#| code-summary: Functions and objects from past sections
+levels_for_premiums <- c("mu_B", "mu_U", "mu_A", "mu_H", "mu_C")
+labels_for_premiums <- c("$\\widehat{\\mu}^B$","$\\widehat{\\mu}^U$", "$\\widehat{\\mu}^A$", "$\\widehat{\\mu}^H$", "$\\widehat{\\mu}^C$")
+
+the_CAS_colors <- c('#FED35D', '#F89708', '#205ED5', '#142345')
+```
+
+## Pre pricing local metrics
+
+Pursuing our simple example with three scenarios, we can dissect proxy vulnerability using its two key components: the risk spread and propensity. With constant risk spread (scenario 1, top on @fig-proxy_dissect_t), the shape of proxy vulnerability depends solely on the propensity function. Scenario 1 yields eight distinct values of proxy vulnerability, as the constant risk spread limits variation to the eight possible values of propensity.
+
+With a variable risk spread (scenario 2, middle of @fig-proxy_dissect_t), proxy vulnerability takes continuous values, even if the propensity has a finite number of values. As $X_1$ increases, the proxy vulnerability moves further away from zero. Its sign depends on whether $P(D = 1 \mid \mathbf{X} = \mathbf{x})$ exceeds its unconditional counterpart (which happens for $x_1 > 1$).
+
+In scenario 3, the propensity reveals that extreme values of $X_1$ -- both high and low -- can indicate membership in the sensitive group $D = 1$. However, this alone is insufficient to identify vulnerable subgroups. The proxy vulnerability bottom panel in @fig-proxy_dissect_t shows that large proxy vulnerability arises only for large $X_1$ values. For low $X_1$ values, while the model is capable of identifying protected subpopulations ($D$), the risk spread is too narrow to yield material proxy effects. Finally, large $X_1$ values paired with $X_2 = 1$ (solid yellow) gives a propensity of $D=1$ around 1/2, and thus no capacity to exploit the risk spread. This highlights the joint roles of risk spread and propensity in understanding proxy vulnerability. 
+
+```{r proxy-theo-viz}
+#| code-fold: true
+#| code-summary: R code producing the theoretical proxy dissection graph. 
+#| warning: false
+#| message: false
+(setNames(nm = names(preds_grid_stats)) %>% lapply(function(name){
+  ## the colors
+   ## the colors
+    cols <- the_CAS_colors
+    pop_id <- which(names(preds_grid_stats) == name)
+    
+    local_to_g <- preds_grid_stats[[name]] %>% 
+  filter(x1 <= 8, x1 >= -5, d == 1) 
+    
+    
+  gg_risk_spread <- local_to_g %>% 
+  ggplot(aes(x = x1, y = risk_spread_t,
+             color = factor(x2),
+             group = factor(x2),
+             lty = factor(x2),
+             linewidth = factor(x2),
+             alpha = factor(x2))) + 
+  geom_line() +
+  theme_minimal() + 
+  labs(x = '',
+       y = latex2exp::TeX("$\\Delta_{risk}(x_1, x_2)$")) + 
+  scale_color_manual(values = cols, name = latex2exp::TeX('$x_2$')) +
+  scale_linetype_manual(values = c('solid', '31', '21', '11'), name = latex2exp::TeX('$x_2$')) +
+  scale_linewidth_manual(values = c(1.5, 1, 0.85, 0.55), name = latex2exp::TeX('$x_2$')) +    
+  scale_alpha_manual(values = c(0.65, 0.75, 0.85, 0.9), name = latex2exp::TeX('$x_2$')) + 
+  scale_y_continuous(labels = scales::dollar, breaks = c(10, 20), limits = c(5, 28)) + 
+  scale_x_continuous(breaks = c(-3:3)*3 + 1, labels = NULL) + 
+    theme(axis.title.y = element_text(size = 8))
+  
+  ## lets graph
+    gg_pdx <- local_to_g %>% 
+  ggplot(aes(x = x1, y = pdx_t,
+             lty = factor(x2),
+             linewidth = factor(x2),
+             shape = factor(x2),
+             alpha = factor(x2),
+             color = factor(x2))) +
+  geom_line() +
+  scale_linetype_manual(values = c('solid', '31', '21', '11'), name = latex2exp::TeX('$x_2$')) +
+  scale_color_manual(values = cols, name = latex2exp::TeX('$x_2$')) +
+  scale_linewidth_manual(values = c(1.5, 1, 0.85, 0.55), name = latex2exp::TeX('$x_2$')) +  
+  scale_alpha_manual(values = c(0.65, 0.75, 0.85, 0.9), name = latex2exp::TeX('$x_2$')) + 
+  labs(x = latex2exp::TeX("$x_1$"),
+       y = latex2exp::TeX("$P(D = 1|x_1, x_2)$")) + 
+  scale_x_continuous(breaks = c(-3:3)*3 + 1)  + # see above
+  theme_minimal() + 
+  scale_y_continuous(breaks = c(0, 0.5, 1), limits = c(0, 1))  +
+  theme(axis.title.y = element_text(size = 8))
+  
+  gg_proxy_vuln <- local_to_g %>% 
+  ggplot(aes(x = x1, y = proxy_vuln_t,
+             color = factor(x2),
+             group = factor(x2),
+             lty = factor(x2),
+             linewidth = factor(x2),
+             alpha = factor(x2))) + 
+  geom_line() +
+  theme_classic() + 
+  labs(x = latex2exp::TeX('$x_1$'),
+       y = latex2exp::TeX("$\\Delta_{proxy}(x_1, x_2)$"),
+       title = paste0('Scenario ', pop_id)) + 
+  scale_color_manual(values = cols, name = latex2exp::TeX('$x_2$')) +
+  scale_linetype_manual(values = c('solid', '41', '32', '11'), name = latex2exp::TeX('$x_2$')) +
+  scale_linewidth_manual(values = c(1.5, 1, 0.85, 0.55), name = latex2exp::TeX('$x_2$')) + 
+  scale_alpha_manual(values = c(0.65, 0.75, 0.85, 0.9), name = latex2exp::TeX('$x_2$')) + 
+  scale_y_continuous(labels = scales::dollar, breaks = c(-5, 0, 5, 10), limits = c(-6, 15)) + 
+  geom_abline(slope = 0, intercept = 0, lty = '32', color= 'black', size= 0.7, alpha = 0.3)+
+  scale_x_continuous(breaks = c(-3:3)*3 + 1) # see above
+  
+  gg_left <- ggpubr::ggarrange(plotlist = list(gg_risk_spread + theme(axis.title.y = element_text(size = 10), legend.position = ''),
+                                               gg_pdx + theme(axis.title.y = element_text(size = 10), legend.position = '')),
+                    nrow = 2)
+  
+ggpubr::ggarrange(plotlist = list(gg_left, gg_proxy_vuln),
+                    ncol = 2, widths = c(2, 3))
+}) %>% 
+  ggpubr::ggarrange(plotlist = .,
+            nrow = 3, 
+            common.legend = T,
+            legend = 'right')) %>% 
+ggsave(filename = "figs/graph_proxy_dissect_t_perpop.png",
+       plot = .,
+       height = 8.25,
+       width = 7.00,
+       units = "in",
+       device = "png", dpi = 500)
+
+```
+
+![Risk spread (top left) and propensity (bottom left) are the components of the theoretical proxy vulnerability (right panel) for the three scenarios (vertical blocks) of the example.](figs/graph_proxy_dissect_t_perpop.png){#fig-proxy_dissect_t width=100%}
+
+@fig-proxy_dissect depicts the estimated version of @fig-proxy_dissect_t. Ignoring estimation variability, the findings remains. While the simplicity of the example setup makes it intuitive to visualize for which values of $(x_1, x_2)$ proxy vulnerability is the highest, the next @sec-partition will discuss how partitioning may help to uncover subpopulations with the highest proxy vulnerability.  
+
+```{r proxy-est-viz}
+#| code-fold: true
+#| code-summary: R code producing the estimated proxy dissection graph. 
+#| warning: false
+#| message: false
+(setNames(nm = names(preds_grid_stats)) %>% lapply(function(name){
+  ## the colors
+   ## the colors
+    cols <- the_CAS_colors
+    pop_id <- which(names(preds_grid_stats) == name)
+    
+    local_to_g <- preds_grid_stats[[name]] %>% 
+  filter(x1 <= 8, x1 >= -5, d == 1) 
+    
+    
+  gg_risk_spread <- local_to_g %>% 
+  ggplot(aes(x = x1, y = risk_spread,
+             color = factor(x2),
+             group = factor(x2),
+             lty = factor(x2),
+             linewidth = factor(x2),
+             alpha = factor(x2))) + 
+  geom_line() +
+  theme_minimal() + 
+  labs(x = '',
+       y = latex2exp::TeX("$\\widehat{\\Delta}_{risk}(x_1, x_2)$")) + 
+  scale_color_manual(values = cols, name = latex2exp::TeX('$x_2$')) +
+  scale_linetype_manual(values = c('solid', '31', '21', '11'), name = latex2exp::TeX('$x_2$')) +
+  scale_linewidth_manual(values = c(1.5, 1, 0.85, 0.55), name = latex2exp::TeX('$x_2$')) +    
+  scale_alpha_manual(values = c(0.65, 0.75, 0.85, 0.9), name = latex2exp::TeX('$x_2$')) + 
+  scale_y_continuous(labels = scales::dollar, breaks = c(10, 20), limits = c(5, 28)) + 
+  scale_x_continuous(breaks = c(-3:3)*3 + 1, labels = NULL) + 
+    theme(axis.title.y = element_text(size = 8))
+  
+  ## lets graph
+    gg_pdx <- local_to_g %>% 
+  ggplot(aes(x = x1, y = pdx,
+             lty = factor(x2),
+             linewidth = factor(x2),
+             shape = factor(x2),
+             alpha = factor(x2),
+             color = factor(x2))) +
+  geom_line() +
+  scale_linetype_manual(values = c('solid', '31', '21', '11'), name = latex2exp::TeX('$x_2$')) +
+  scale_color_manual(values = cols, name = latex2exp::TeX('$x_2$')) +
+  scale_linewidth_manual(values = c(1.5, 1, 0.85, 0.55), name = latex2exp::TeX('$x_2$')) +  
+  scale_alpha_manual(values = c(0.65, 0.75, 0.85, 0.9), name = latex2exp::TeX('$x_2$')) + 
+  labs(x = latex2exp::TeX("$x_1$"),
+       y = latex2exp::TeX("$\\widehat{P}(D = 1|x_1, x_2)$")) + 
+  scale_x_continuous(breaks = c(-3:3)*3 + 1)  + # see above
+  theme_minimal() + 
+  scale_y_continuous(breaks = c(0, 0.5, 1), limits = c(0, 1))  +
+  theme(axis.title.y = element_text(size = 8))
+  
+  gg_proxy_vuln <- local_to_g %>% 
+  ggplot(aes(x = x1, y = proxy_vuln,
+             color = factor(x2),
+             group = factor(x2),
+             lty = factor(x2),
+             linewidth = factor(x2),
+             alpha = factor(x2))) + 
+  geom_line() +
+  theme_classic() + 
+  labs(x = latex2exp::TeX('$x_1$'),
+       y = latex2exp::TeX("$\\widehat{\\Delta}_{proxy}(x_1, x_2)$"),
+       title = paste0('Scenario ', pop_id)) + 
+  scale_color_manual(values = cols, name = latex2exp::TeX('$x_2$')) +
+  scale_linetype_manual(values = c('solid', '41', '32', '11'), name = latex2exp::TeX('$x_2$')) +
+  scale_linewidth_manual(values = c(1.5, 1, 0.85, 0.55), name = latex2exp::TeX('$x_2$')) + 
+  scale_alpha_manual(values = c(0.65, 0.75, 0.85, 0.9), name = latex2exp::TeX('$x_2$')) + 
+  scale_y_continuous(labels = scales::dollar, breaks = c(-5, 0, 5, 10), limits = c(-6, 15)) + 
+  geom_abline(slope = 0, intercept = 0, lty = '32', color= 'black', size= 0.7, alpha = 0.3)+
+  scale_x_continuous(breaks = c(-3:3)*3 + 1) # see above
+  
+  gg_left <- ggpubr::ggarrange(plotlist = list(gg_risk_spread + theme(axis.title.y = element_text(size = 10), legend.position = ''),
+                                               gg_pdx + theme(axis.title.y = element_text(size = 10), legend.position = '')),
+                    nrow = 2)
+  
+ggpubr::ggarrange(plotlist = list(gg_left, gg_proxy_vuln),
+                    ncol = 2, widths = c(2, 3))
+}) %>% 
+  ggpubr::ggarrange(plotlist = .,
+            nrow = 3, 
+            common.legend = T,
+            legend = 'right')) %>% 
+ggsave(filename = "figs/graph_proxy_dissect_perpop.png",
+       plot = .,
+       height = 8.25,
+       width = 7.00,
+       units = "in",
+       device = "png", dpi = 500)
+
+```
+
+![Risk spread (top left) and propensity (bottom left) are the components of the estimated proxy vulnerability (right panel) for the three scenarios (vertical blocks) of the exampe.](figs/graph_proxy_dissect_perpop.png){#fig-proxy_dissect width=100%}
+
+## Post pricing local metrics
+
+Given a commercial price, one may leverage the spectrum of fairness to better grasp the farness implication of the commercial price. We start by constructing a fictive commercial price to illustrate. 
+
+### Construction a ``given'' price for fairness evaluation
+
+To illustrate how fairness considerations interact with real-world ratemaking, we replicated realistic practical decisions. We assume no direct discrimination on $D$. We cap premiums for $X_1 > 6$ and group levels $X_2=1$ and $X_2=3$ due to low exposure for the former. We then train a `lightgbm` model to predict $Y$, forming the technical premiums. The commercial adjustments are targeted discounts of 15\% when $X_1 < 0$ and 10\% when $X_2 = 2$, reflecting pricing incentives for perceived lower-risk groups. Finally, the commercial price is globally rebalanced at the level of the best-estimate price. We end up with a pricing function $\pi(x_1, x_2)$ for which we want to assess fairness with respect to $D$. 
+
+```{r computing-fictive-pricing}
+#| code-fold: true
+#| code-summary: Training the fictive pricing function
+#| warning: false
+#| message: false
+source('___lgb_given_tariff.R')
+
+## clean the pred repo
+unlink(file.path('preds', "*_best_estimate.json"))
+given_lgb <- setNames(nm = names(preds_grid_stats)) %>% lapply(function(name){
+  list_df <- list('train' = sims[[name]],
+                  'valid' = valid[[name]],
+                  'test' = test[[name]])
+  the_given_tarif_lightgbm_fun(list_data = list_df, 
+                                 name = name)
+})
+```
+
+:::{.callout-note}
+
+Because the price $\pi(x_1, x_2)$ does not discriminate directly on $D$, it does not make a lot of sense to compute the excess lift local metric. 
+
+:::
+
+
+
+
+```{r computing-pop-post-metrics}
+#| code-fold: true
+#| code-summary: Computing post pricing metrics on the populations
+#| warning: false
+#| message: false
+#| 
+compute_mub0_mub1 <- function(data, mua_col, mub_col, d_col, pd) {
+  # Validate input
+  if (!is.data.frame(data)) stop("Input `data` must be a data frame.")
+  if (!(mua_col %in% colnames(data))) stop("mu_A column not found in the dataset.")
+  if (!(mub_col %in% colnames(data))) stop("mu_B column not found in the dataset.")
+  if (!(d_col %in% colnames(data))) stop("D column not found in the dataset.")
+  if (length(pd) != 2 || any(pd <= 0) || sum(pd) != 1) stop("PD must be a valid probability vector of length 2 summing to 1.")
+  
+  # Extract the columns
+  mu_A <- data[[mua_col]]
+  mu_B <- data[[mub_col]]
+  D <- data[[d_col]]
+  
+  # Compute SB0 and SB1
+  muB0 <- ifelse(D == 1, 
+                (mu_A - pd[2] * mu_B) / pd[1],  # Formula for SB0 when D = 1
+                mu_B)                          # SB0 = SB when D = 0
+  muB1 <- ifelse(D == 0, 
+                (mu_A - pd[1] * mu_B) / pd[2],  # Formula for SB1 when D = 0
+                mu_B)                          # SB1 = SB when D = 1
+  
+  # Return the modified dataset with SB0 and SB1
+  return(
+    list(muB0, muB1)
+  )
+}
+
+pregroup_pop_stats <- setNames(nm = names(preds_pop_stats)) %>% lapply(function(name){
+    setNames(nm = names(preds_pop_stats[[name]])) %>% lapply(function(the_set){
+      the_data <- preds_pop_stats[[name]][[the_set]]
+      the_data$prem <- NULL
+      the_data$eb <- NULL; the_data$eu <- NULL; the_data$ea <- NULL; the_data$eh <- NULL; the_data$ec <- NULL;
+      the_data$rb <- NULL; the_data$ru <- NULL; the_data$ra <- NULL; the_data$rh <- NULL; the_data$rc <- NULL; the_data$r <- NULL
+      
+      mu_b1b0 <- compute_mub0_mub1(the_data, 'mu_A', 'mu_B', 'D', c(0.5, 0.5))
+      
+      data.frame(the_data, 
+                 'prem' = given_lgb[[name]]$pred_fun(the_data)) %>% 
+                mutate('eb' = prem - mu_B, 
+                        'eu' = prem - mu_U,
+                        'ea' = prem - mu_A,
+                        'eh' = prem - mu_H,
+                        'ec' = prem - mu_C,
+                        'rb' = eb > 0,
+                        'ru' = eu > 0,
+                        'ra' = ea > 0,
+                        'rh' = eh > 0,
+                        'rc' = ec > 0,
+                        'r' = rb + ru + ra + rh + rc,
+           'comm_load' = ea,
+           'comm_burden' = ea/mu_A, 
+           'mu_B1' = mu_b1b0[[2]], 
+           'mu_B0' = mu_b1b0[[1]],
+           'implied_prop' = (prem - mu_B0)/(mu_B1 - mu_B0))
+    })  
+})
+
+toJSON(pregroup_pop_stats, pretty = TRUE, auto_unbox = TRUE) %>% write('preds/pregroup_pop_stats.json')
+```
+
+
+```{r computing-grid-post-metrics}
+#| code-fold: true
+#| code-summary: Computing post pricing metrics on the grid
+#| warning: false
+#| message: false
+
+pregroup_grid_stats <- setNames(nm = names(preds_grid_stats)) %>% lapply(function(name){
+    the_data <- preds_grid_stats[[name]] 
+    
+        the_data$prem <- NULL
+    the_data$eb <- NULL; the_data$eu <- NULL; the_data$ea <- NULL; the_data$eh <- NULL; the_data$ec <- NULL;
+    the_data$rb <- NULL;the_data$ru <- NULL; the_data$ra <- NULL; the_data$rh <- NULL; the_data$rc <- NULL; the_data$r <- NULL
+    
+    mu_b1b0 <- compute_mub0_mub1(the_data, 'mu_A', 'mu_B', 'd', c(0.5, 0.5))
+    
+    the_data$prem <- NULL
+  data.frame(the_data, 
+            'prem' = given_lgb[[name]]$pred_fun(the_data %>% 
+      mutate(X1 = x1, X2 = x2))) %>% 
+    mutate('eb' = prem - mu_B, 
+            'eu' = prem - mu_U,
+            'ea' = prem - mu_A,
+            'eh' = prem - mu_H,
+            'ec' = prem - mu_C,
+            'rb' = eb > 0,
+            'ru' = eu > 0,
+            'ra' = ea > 0,
+            'rh' = eh > 0,
+            'rc' = ec > 0,
+            'r' = rb + ru + ra + rh + rc,
+           'comm_load' = ea, 
+           'comm_burden' = ea/mu_A, 
+           'muB1' = mu_b1b0[[2]], 
+           'muB0' = mu_b1b0[[1]],
+           'implied_prop' = (prem - muB0)/(muB1 - muB0))
+})
+
+toJSON(pregroup_grid_stats, pretty = TRUE, auto_unbox = TRUE) %>% write('preds/pregroup_grid_stats.json')
+```
+
+### Commercial burden
+
+In Fig.~\ref{fig:comm_burden}, we plot for scenario 3 the pricing function $\pi$ (solid line) in terms of $x_1$ and $x_2$ (panel), along with the corresponding aware premium (dashed line). The gap between the two is the commercial burden, which we highlight with the color scale. As expected for scenario 3, the individuals with $x_2 = 4$ and high values of $x_1$ bear the highest commercial burden despite the plateau for $x_2 > 6$. The discount introduced for $x_1 < 0$ does lower premiums, but implies a loading for $x_1>0$ (when balancing the rates), which further adds commercial burden for individuals on the right of the last panel of @fig-comm_burden, regardless of the insurer's intent.
+
+```{r comm-burden-viz}
+#| code-fold: true
+#| code-summary: R code producing the commercial burden illustration.
+#| warning: false
+#| message: false
+
+## Parse latex in facet 
+appender <- function(string) {
+  if (length(string) > 1) {
+    return(sapply(string, latex2exp::TeX))
+  } else {
+    return(latex2exp::TeX(string))
+  }
+}
+
+
+# Generate 50 discrete percentage levels from 0 to 0.75
+num_levels <- 25
+max_val <- 0.1
+min_val <- -1 * max_val
+pct_levels <- seq(0, max_val, length.out = num_levels)
+
+# Create positive and negative threshold mappings
+pos_thresholds <- setNames(pct_levels, paste0("cload_", seq_len(num_levels)))
+neg_thresholds <- setNames(-pct_levels, paste0("cload_", seq_len(num_levels), "_down"))
+
+# Combine both sets of thresholds
+all_thresholds <- c(pos_thresholds, neg_thresholds)
+
+# Define color mapping for each threshold
+color_palette <- colorRampPalette(
+  c("#91CF60", "#FFFFBF", "#FC8D59", 'firebrick4'),
+  bias = 1.5
+  )(num_levels) 
+fill_levels <- names(all_thresholds)
+
+library(cowplot)
+
+to_save_giventariff_perpop <- names(pregroup_grid_stats) %>% 
+  lapply(function(name){
+    pop_id <- which(names(pregroup_grid_stats) == name)
+the_df <- pregroup_grid_stats[[name]] %>%
+  filter(d == 1) %>%
+  mutate(x2 = factor(x2,
+                     levels = 1:4,
+                     labels = paste0('$\\x_2 = $', 1:4)))
+
+the_df$prem[the_df$pdx < 0.03] <- NA
+
+the_df$factor_cload <- factor(ifelse(the_df$comm_load <0,
+                                                             '1', '2')
+                                                      )
+
+# Apply generalized transformation using a for loop
+for (col_name in names(all_thresholds)) {
+  col_value <- all_thresholds[[col_name]]
+  
+   # Check condition for each row
+  if(grepl("_down$", col_name)){
+    condition <-  the_df$comm_burden < col_value
+  } else {
+    condition <-  the_df$comm_burden > col_value
+  } 
+  
+  # Compute the new column values based on the condition
+  the_df[[col_name]] <- ifelse(condition, the_df$comm_load, NA_real_)
+}
+
+
+
+# Create the base plot
+the_plot <- the_df %>%
+  ggplot(aes(x = x1, y = prem, group = factor(x2))) +
+  
+  scale_y_continuous(labels= scales::dollar, limits = c(85, 155)) +
+  facet_grid(~factor(x2), 
+             labeller = as_labeller(appender, 
+                                    default = label_parsed,
+                                    multi_line = TRUE)) +
+  theme_classic() +
+  labs(y = 'Premium', x = latex2exp::TeX('$x_1$'),
+       title = latex2exp::TeX(paste0('Scenario ', pop_id))) +
+  scale_x_continuous(breaks = c(-3, 0, 3, 6), limits = c(-4, 7))
+
+# Generate and add geom_ribbon layers dynamically inside ggplot
+for (col_name in c(head(fill_levels, num_levels), tail(fill_levels, num_levels))) {
+  
+  temp_data <- the_df 
+    temp_data$fill_factor <- factor(col_name, levels = fill_levels)  # Ensure fill uses a factor
+  
+  if(grepl("_down", col_name)) {
+    temp_data$y_min <- the_df[[col_name]] + the_df$mu_A
+    temp_data$y_max <- (1 + all_thresholds[col_name])  * the_df$mu_A
+  } else {
+    temp_data$y_min <- (1 + all_thresholds[col_name]) * the_df$mu_A
+    temp_data$y_max <- the_df[[col_name]] + the_df$mu_A
+  }
+  
+  the_plot <- the_plot +
+    geom_ribbon(
+      data = temp_data,
+      aes(
+        x = x1, 
+        ymax = y_max,
+        ymin = y_min,
+        group = x2,
+        fill =fill_factor
+      ),
+      inherit.aes = FALSE,
+      alpha = 1
+    )
+  rm(temp_data)
+}
+
+# Apply color mapping
+the_plot <- the_plot +
+  scale_fill_manual(
+    values = setNames(c(color_palette, color_palette), levels(fill_levels)),
+    # breaks = ,
+    # labels = c(),
+    guide = 'none'
+    #,labels = scales::label_number(accuracy = 0.01)
+  ) +
+  geom_line(aes(y = mu_A, linetype = "mu_A", color = "mu_A", linewidth = "mu_A"), alpha = 0.8) +
+  geom_line(aes(linetype = "prem", color = "prem", linewidth = "prem"), alpha = 0.8) +
+scale_linetype_manual(
+  values = c("mu_A" = "21", "prem" = "solid"),
+  labels = c("mu_A" = latex2exp::TeX('$\\widehat{\\mu}^A(x_1)$'),
+             "prem" = latex2exp::TeX('$\\pi(x_1, x_2)$')),
+  name = latex2exp::TeX("Premium")) + 
+   scale_color_manual(
+  values = c("mu_A" = "grey50", "prem" = "black"),
+  labels = c("mu_A" = latex2exp::TeX('$\\widehat{\\mu}^A(x_1)$'),
+             "prem" = latex2exp::TeX('$\\pi(x_1, x_2)$')),
+  name = latex2exp::TeX("Premium")) + 
+  scale_alpha_manual(
+  values = c("mu_A" = 1, "prem" = 0.45),
+  labels = c("mu_A" = latex2exp::TeX('$\\widehat{\\mu}^A(x_1)$'),
+             "prem" = latex2exp::TeX('$\\pi(x_1, x_2)$')),
+  name = latex2exp::TeX("Premium")) + 
+  scale_linewidth_manual(
+  values = c("mu_A" = 1, "prem" = 1.2),
+  labels = c("mu_A" = latex2exp::TeX('$\\widehat{\\mu}^A(x_1)$'),
+             "prem" = latex2exp::TeX('$\\pi(x_1, x_2)$')),
+  name = latex2exp::TeX("Premium"))+
+  guides(fill = guide_colorbar(barwidth = 10, barheight = 0.5)) + 
+  theme(legend.position = "right") 
+
+# Define the fake gradient legend (purely visual)
+
+legend_df <- data.frame(y = seq(min_val, max_val, length.out = 100), x = 1)  
+fake_legend_plot <- ggplot(legend_df, aes(x = x, y = y, fill = y)) +
+  geom_tile() +
+  scale_fill_gradientn(
+    colors = c( rev(color_palette),  color_palette),  
+    limits = c(-max_val, max_val),
+    name = "Commercial burden",
+    breaks = c(-max_val, 0, max_val),  
+    labels = c(paste0(scales::percent(-max_val)), 
+               paste0(round(0, 3)), 
+               paste0(scales::percent(max_val)))
+  ) +
+  theme_void() 
+
+
+true_legend <- cowplot::get_legend(the_plot)
+fake_legend <- cowplot::get_legend(fake_legend_plot)
+
+combined_legend <- ggpubr::ggarrange(fake_legend, true_legend, ncol = 1, nrow = 2)
+
+hide_legend <- !(pop_id == 2)
+
+# Function to create a white space placeholder
+white_space <- ggplot() + 
+  theme_void() + 
+  theme(plot.background = element_rect(fill = "white", color = "white"))  # Ensures white background
+
+legend_to_use <- if (hide_legend) white_space else combined_legend
+
+final_plot <- (the_plot + theme(legend.position = '')) %>% 
+  ggpubr::ggarrange(.,
+                    legend_to_use,
+                    widths = c(4, 0.75))
+
+ggsave(filename = paste0("figs/graph_giventariff_commload_", name, ".png"),
+       plot = (the_plot + theme(legend.position = '')) %>% 
+  ggpubr::ggarrange(.,
+                    combined_legend,
+                    widths = c(4, 1)),
+       height = 3.75,
+       width = 9.55,
+       units = "in",
+       device = "png", dpi = 500)
+       
+return(final_plot)
+  }) %>% ggpubr::ggarrange(plotlist = .,
+                           nrow = 3,
+                           widths = 15, heights = 1,
+                           common.legend = T,
+                           legend = 'right')
+
+ggsave(filename = "figs/graph_giventariff_commload.png",
+       plot = to_save_giventariff_perpop,
+       height = 10.75,
+       width = 9.55,
+       units = "in",
+       device = "png", dpi = 500)
+
+
+
+```
+
+![Commercial price (solid line) and aware premium (dashed line) of Ex.~\ref{ex:simul} in scenario 3 in terms of $x_1$ and $x_2$ (panel), with the commercial burden colored.](figs/graph_giventariff_commload.png){#fig-comm_burden width=100%}
+
+
+### Implied propensity
+
+In the top row of @fig-imp_prop, we depict the pricing function $\pi(x_1, x_2)$ (colored lines), the best-estimate premium $\mu^B(x_1, d)$ for $d=0$ (large solid gray) and $d=1$ (thin solid gray), and the aware premium $\mu^A(x_1)$ (dashed line). The colors correspond to grouped values of the implied propensity (section 5.2.2 of the **main article**), which is illustrated in the bottom row of @fig-imp_prop. We see in blue and red that the implied propensity is not bounded by $0$ and $1$, and highlights segments warranting attention.
+    
+
+```{r implied-prop-viz}
+#| code-fold: true
+#| code-summary: R code producing the implied propensity illustration.
+#| warning: false
+#| message: false
+
+
+
+to_save_giventariff_perpop <- names(pregroup_grid_stats) %>% 
+  lapply(function(name){
+    pop_id <- which(names(pregroup_grid_stats) == name)
+    pregroup_grid_stats[[name]]$prem[pregroup_grid_stats[[name]]$pdx < 0.03] <- NA
+    pregroup_grid_stats[[name]]$factor_imp_prop <- factor(ifelse(pregroup_grid_stats[[name]]$implied_prop <0,
+                                                             '1',
+                                                             ifelse(pregroup_grid_stats[[name]]$implied_prop <0.5,
+                                                             '2',
+                                                             ifelse(pregroup_grid_stats[[name]]$implied_prop < 1,
+                                                             '3',
+                                                             '4')
+                                                             ))
+                                                      )
+## Top plot
+the_plot <- pregroup_grid_stats[[name]]  %>% 
+  mutate(x2 = factor(x2,
+                             levels = 1:4,
+                             labels = paste0('$\\x_2 = $', 1:4))) %>% 
+          ggplot(aes(x= x1,
+                     y = prem,
+             lwd = factor(d),
+             alpha= factor(d),
+             color = factor_imp_prop,
+             group = factor(d))) +
+  # geom_line() + 
+  facet_grid(~factor(x2), 
+             labeller = as_labeller(appender, 
+                            default = label_parsed,
+                            multi_line = TRUE)) + 
+  theme_classic() + 
+  scale_color_brewer(palette = 'Spectral', guide = NULL) + 
+  scale_alpha_manual(values = c('1' = 0.95,
+                                '0' = 0.45), name = latex2exp::TeX('$d$')) + 
+  scale_linewidth_manual(values = c('1' = 1.25,
+                                    '0' = 2.5), name = latex2exp::TeX('$d$')) + 
+  labs(y = 'Premium', x = '',
+       title =  latex2exp::TeX(paste0('Scenario ', pop_id))) +
+  scale_x_continuous(labels = NULL, breaks = NULL, limits = c(-4, 7))  
+
+for (family in c('mu_B', 'mu_A')) { #c('SB', 'SU', 'SA', 'SH', 'SC')) {
+  for (sens in c(0, 1)) {
+    
+    ## filter
+    filtered_data <- pregroup_grid_stats[[name]] %>% 
+      filter(d == sens) %>% 
+      mutate(family = family,
+             x2 = factor(x2,
+                         levels = 1:4,
+                         labels = paste0('$\\x_2 = $', 1:4)))
+    
+    filtered_data$pred <- filtered_data[[family]]
+    filtered_data$pred[filtered_data$pdx < 0.1] <- NA
+    
+    ## aes specific to 'd'
+    the_lwd <- ifelse(sens == 1, 0.65, 1.4)
+    the_alpha <- ifelse(sens == 1, 0.85, 0.75)
+    the_color <- ifelse(sens == 1, 'grey60', 'grey80')
+    ## add the plot
+    the_plot <- the_plot +
+      geom_line(data = filtered_data,
+      mapping = aes(x = x1, y = pred,
+                    group = factor(1),
+                    linetype = family),
+      inherit.aes = FALSE,
+      lwd = the_lwd,
+      alpha = the_alpha,
+      color = the_color) 
+  }
+}
+
+the_lty_values <- c('mu_B' = "solid",
+                    'mu_A' = "32")
+
+
+# Add legend layers manually
+the_plot <- the_plot +
+  geom_line(lineend = "round", linejoin = "round") +
+  scale_y_continuous(breaks = c(90, 110, 130),
+                     labels = scales::dollar,
+                     limits = c(90, 140))+
+  scale_linetype_manual(
+    values = the_lty_values,
+    labels = c(latex2exp::TeX('$\\widehat{\\mu}^B$'),
+               latex2exp::TeX('$\\widehat{\\mu}^A$')),
+    name = latex2exp::TeX("$Premium \\ \\ \\ \\ \\ $")
+  ) + 
+  guides(
+    linetype = guide_legend(
+      order = 1,
+      override.aes = list(
+        color = "grey70",  # Set grey color for linetype legend
+        alpha = 1,         # Enforce alpha = 1
+        lwd = 0.7 # Enforce alpha = 1 for linetype legend
+      )
+    ),
+    linewidth = guide_legend(
+      order = 1,
+      override.aes = list(color = 'grey70')),
+    alpha = guide_legend(
+      order = 1,
+      override.aes = list(color = 'grey70'))
+    ) + 
+  
+  theme(plot.margin = unit(c(10, 5.5, 0, 5.5), "pt"))
+
+
+## Bottom plot
+the_plot2 <- pregroup_grid_stats[[name]]  %>% 
+  mutate(x2 = factor(x2,
+                             levels = 1:4,
+                             labels = paste0('$\\x_2 = $', 1:4))) %>% 
+          ggplot(aes(x= x1,
+                     y = implied_prop,
+             lwd = factor(d),
+             alpha= factor(d),
+             color = factor_imp_prop,
+             group = factor(d))) +
+  facet_grid(~factor(x2), 
+             labeller = as_labeller(appender, 
+                            default = label_parsed,
+                            multi_line = TRUE)) + 
+  theme_classic() + 
+  scale_color_brewer(palette = 'Spectral', labels = c('1' = '< 0',
+                                                      '2' = latex2exp::TeX('in $[0, P(D = 1)]$'),
+                                                      '3' = latex2exp::TeX('in $[P(D = 1), 1]$'),
+                                                      '4' = '> 1'),
+                     name = 'Imp. propensity') + 
+  scale_alpha_manual(values = c('1' = 0.95,
+                                '0' = 0.45), guide = NULL) + 
+  scale_linewidth_manual(values = c('1' = 1.25,
+                                    '0' = 2.5), guide = NULL) + 
+  labs(y = 'Propensity', x = latex2exp::TeX('$x_1$')) +
+  scale_x_continuous( breaks = c(-3, 0, 3, 6), limits = c(-4, 7))  +
+annotate("rect", xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = 0,
+           fill = RColorBrewer::brewer.pal(4, 'Spectral')[1], alpha = 0.1) +
+  
+    annotate("rect", xmin = -Inf, xmax = Inf, ymin = 0, ymax = 0.5,
+           fill = RColorBrewer::brewer.pal(4, 'Spectral')[2], alpha = 0.1) +
+  
+    annotate("rect", xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1,
+           fill = RColorBrewer::brewer.pal(4, 'Spectral')[3], alpha = 0.1) +
+  
+    annotate("rect", xmin = -Inf, xmax = Inf, ymin = 1, ymax = Inf,
+           fill = RColorBrewer::brewer.pal(4, 'Spectral')[4], alpha = 0.1) +
+   geom_hline(yintercept = c(0, 1),
+             linetype = "dotted",
+             color = "black",
+             linewidth = 0.5,
+             inherit.aes = FALSE)  
+  
+for (family in c('mu_A', 'mu_B')) {
+    ## filter
+    filtered_data <- pregroup_grid_stats[[name]] %>% 
+      filter(d == 1) %>% 
+      mutate(x2 = factor(x2,
+                         levels = 1:4,
+                         labels = paste0('$\\x_2 = $', 1:4)),
+             family = family)
+    
+    if(family == 'mu_B'){
+      filtered_data$pred <- filtered_data$pdx
+    } else if(family == 'mu_A'){
+      filtered_data$pred <- 0.5
+    }
+    filtered_data$pred[filtered_data$pdx < 0.1] <- NA
+    
+    ## aes specific to 'd'
+    the_lwd <-  0.65
+    the_alpha <- 0.85
+    the_color <- 'grey60'
+    
+    ## add the plot
+    the_plot2 <- the_plot2 +
+      geom_line(data = filtered_data,
+      mapping = aes(x = x1, y = pred,
+                    group = factor(1),
+                    lty = family),
+      inherit.aes = FALSE,
+      lwd = the_lwd,
+      alpha = the_alpha,
+      color = the_color)  
+}
+
+the_lty_values <- c('mu_A' = "32",
+                    'mu_B' = "solid")
+
+
+# Add legend layers manually
+the_plot2 <- the_plot2 +
+  geom_line(lineend = "round", linejoin = "round") +
+  scale_y_continuous(labels = scales::percent, 
+                     breaks = c(0, 0.5, 1), limits = c(-0.2, 1.30)) + 
+  scale_linetype_manual(
+  values = the_lty_values,
+  labels = c(latex2exp::TeX('$\\widehat{P}(D= 1)$'),
+             latex2exp::TeX('$\\widehat{P}(D= 1|x_1, x_2)$')),
+  name = "Propensity") + 
+  
+  
+   guides(
+    linetype = guide_legend(
+      order = 2,
+      override.aes = list(
+        color = "grey70",  
+        alpha = 1,        
+        lwd = 1 
+        )
+    ),
+    color = guide_legend(
+      order = 1,
+      override.aes = list(lwd = 1.5))) + 
+  theme(plot.margin = unit(c(0, 5.5, 0, 5.5), "pt"),
+        strip.background = element_blank(),
+    strip.text = element_blank())
+
+final_fig <- ggpubr::ggarrange(the_plot, the_plot2,
+                  nrow = 2, 
+                  heights = c(3, 2))
+
+ggsave(filename = paste0("figs/graph_giventariff_imp_prop_", name, ".png"),
+       plot = final_fig,
+       height = 5.25,
+       width = 8.55,
+       units = "in",
+       device = "png", dpi = 500)
+       
+return(final_fig)
+  }) %>% ggpubr::ggarrange(plotlist = .,
+                           nrow = 3,
+                           widths = 15, heights = 1)
+
+
+ggsave(filename = "figs/graph_giventariff_imp_prop.png",
+       plot = to_save_giventariff_perpop,
+        height = 14.75,
+       width = 10.55,
+       units = "in",
+       device = "png", dpi = 500)
+```
+
+
+![Top row: commercial price (colored), best-estimate (solid gray) and aware (dashed gray) premiums for every scenario in terms of $x_1$, $x_2$ (panel) and $d$ (line width). The colors represent the interval in which the implied propensity lies. Bottom row: corresponding implied propensity (colored), estimated propensity (solid gray), and proportion of $D=1$ (dashed gray).](figs/graph_giventariff_imp_prop.png){#fig-imp_prop width=100%}

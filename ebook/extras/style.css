@@ -1,0 +1,63 @@
+/* === GLOBAL ================================================ */
+body {
+  opacity: 0;
+  animation: fadeIn 0.7s ease-out forwards;
+  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+/* === CALLOUT: BASE ========================================= */
+.callout {
+  border-left: 4px solid #ccc;
+  border-radius: 00px;
+  padding: 0rem 0rem;
+  margin: 1.25rem 0;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.callout:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+/* === CALLOUT TYPE COLORS =================================== */
+:root {
+  --note-bg:      #f4f9ff;
+  --note-bar:     #205ED5;
+  --tip-bg:       #f4fff9;
+  --tip-bar:      #95CDF8;
+  --warning-bg:   #fffdf5;
+  --warning-bar:  #F89708;
+  --caution-bg:   #fff6f6;
+  --caution-bar:  #F89708;
+  --important-bg: #fcf6ff;
+  --important-bar:#b45ef4;
+  --insight-bg:   #f6fafd;
+  --insight-bar:  #3182ce;
+}
+
+.callout-note      { border-color: var(--note-bar);     background: var(--note-bg);     }
+.callout-tip       { border-color: var(--tip-bar);      background: var(--tip-bg);      }
+.callout-warning   { border-color: var(--warning-bar);  background: var(--warning-bg);  }
+.callout-caution   { border-color: var(--caution-bar);  background: var(--caution-bg);  }
+.callout-important { border-color: var(--important-bar);background: var(--important-bg);}
+.callout.custom-insight {
+  border-color: var(--insight-bar);
+  background: var(--insight-bg);
+}
+
+/* === ANIMATIONS & RESPONSIVE ============================== */
+@media (prefers-reduced-motion: no-preference) {
+  .callout {
+    animation: fadePop .4s ease-out both;
+  }
+  @keyframes fadePop {
+    0%   { opacity: 0; transform: scale(.97); }
+    100% { opacity: 1; transform: scale(1);   }
+  }
+}

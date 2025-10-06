@@ -22,11 +22,14 @@ book:
     - index.qmd
     - 1_simul_dataset.qmd
     - 2_training_spectrum.qmd
-    - 3_dimensions.qmd
-    - 4_local.qmd
+    - 3_local.qmd
+    - 4_dimensions.qmd
     - 5_partitioning.qmd
     - 6_integrated_framework.qmd
     - 9_references.qmd
+  sidebar:
+    title: "Chapters"
+    style: floating
   navbar:
     right:
       - icon: github
@@ -39,7 +42,15 @@ fig-cap-location: top
 
 format:
   html:
-    theme: litera
+    code-copy: true
+    code-fold: true
+    lightbox: auto
+    highlight-style: github
+    search: true
+    theme: cosmo
+    self-contained: true
+    include-before-body: extras/Sidebar.html
+    css: extras/style.css
     html-math-method: mathjax
     include-in-header:
     - file: mathjax-color.html

@@ -11,5 +11,1228 @@ editor-options:
 
 ## Objectives
 
+We illustrate here our two approache used to build counterfactuals for compositional data. The ultimate goal is to provide a methodology to build counterfactuals for categorical data (see [Chapter -@sec-german-credit]).
+
+The first method ([Chapter -@sec-first-method]) consists in using  Gaussian optimal transport based on an alternative representation of the probability vector (in the Euclidean space $\mathbb{R}^{d-1}$).
+
+The second method (@sec-second-method) uses transport and matching directly within the simplex $\mathcal{S}_d$ using an appropriate cost function.
+
+We illustrate the two methods using a toy dataset.
 
 :::
+
+
+```{r load-packages}
+#| code-fold: true
+#| code-summary: Packages for this section
+#| warning: false
+#| message: false
+library(tidyverse)
+library(latex2exp)
+library(jsonlite)
+library(partykit) # to predict the evtree from dictionnary
+```
+
+
+```{r load-data}
+#| code-fold: true
+#| code-summary: Data for this section
+#| warning: false
+#| message: false
+
+the_CAS_colors_full <- c('#F89708', '#FDB922', '#FED35D', '#95CDF8', '#205ED5', '#142345')
+
+marg_dist <- readRDS('preds/the_empirical_proportions.rds')
+dictionnary_leaves_trees <- readRDS('evtree/dictionnary_leaves_trees.rds')
+group_grid_stats <- jsonlite::fromJSON('preds/group_grid_stats.json')
+group_pop_stats <- jsonlite::fromJSON('preds/group_pop_stats.json')
+```
+
+```{r load-fn}
+#| code-fold: true
+#| code-summary: Functions for this section (long)
+#| warning: false
+#| message: false
+
+# Helper function to calculate summaries
+calculate_summary <- function(column, variable_name, summary_functions) {
+  summary_df <- data.frame(Variable = character(), Statistic = character(), Value = numeric())
+  
+  for (func in summary_functions) {
+    if (grepl("^\\d*\\.\\d+$", func)) {  # Quantile (VaR)
+      quantile_value <- as.numeric(func)
+      value <- quantile(column, probs = quantile_value, na.rm = TRUE)
+      label <- paste0("VaR ", func)  # Clear label
+      summary_df <- rbind(summary_df, data.frame(Variable = variable_name, Statistic = label, Value = value))
+    } else if (grepl("^TVaR \\d*\\.\\d+$", func)) {  # Tail Value at Risk (TVaR)
+      quantile_value <- as.numeric(sub("TVaR ", "", func))  # Extract quantile
+      var_value <- quantile(column, probs = quantile_value, na.rm = TRUE)
+      tvar_value <- mean(column[column >= var_value], na.rm = TRUE)
+      label <- paste0("TVaR ", quantile_value)
+      summary_df <- rbind(summary_df, data.frame(Variable = variable_name, Statistic = label, Value = tvar_value))
+    } else if (func == "mean") {  # Mean
+      value <- mean(column, na.rm = TRUE)
+      label <- "Mean"
+      summary_df <- rbind(summary_df, data.frame(Variable = variable_name, Statistic = label, Value = value))
+    } else if (func == "std") {  # Standard deviation
+      value <- sd(column, na.rm = TRUE)  # Sample standard deviation
+      label <- "Std"
+      summary_df <- rbind(summary_df, data.frame(Variable = variable_name, Statistic = label, Value = value))
+    } else if (grepl("^%\\d+$", func)) {  # Percentage of specific value
+      target_value <- as.numeric(sub("%", "", func))
+      value <- sum(column == target_value, na.rm = TRUE) / sum(!is.na(column))
+      label <- paste0("% of ", target_value)
+      summary_df <- rbind(summary_df, data.frame(Variable = variable_name, Statistic = label, Value = value))
+    } else {
+      warning(paste("Unsupported summary function:", func, "for variable", variable_name))
+    }
+  }
+  
+  return(summary_df)
+}
+
+
+summarize_demographics <- function(data, sensitive, variables, summary_functions = c('0.1', 'mean', '0.9', '%0')) {
+  # Validate input
+  if (!is.data.frame(data)) stop("Input `data` must be a data frame.")
+  if (!all(variables %in% colnames(data))) stop("Some specified variables are not in the dataset.")
+  if(sensitive %in% variables) variables <- setdiff(variables, sensitive)
+  
+  # Initialize the summary output
+  summary_table <- data.frame(Variable = 'Observations', Statistic = 'Count', Value = nrow(data), stringsAsFactors = FALSE)
+  
+  # Loop over specified variables
+  for (var in c(sensitive, variables)) {
+    if (is.numeric(data[[var]])) {
+      numeric_summary <- calculate_summary(data[[var]], var, summary_functions)
+      summary_table <- rbind(summary_table, numeric_summary)
+    } else if (is.factor(data[[var]]) || is.character(data[[var]])) {
+      # Categorical: Append (c) to variable name
+      categorical_var <- paste0(var, " (c)")
+      
+      if(var == sensitive) categorical_var <- paste0('(Sensitive) ', categorical_var)
+      
+      # Count occurrences for all levels
+      counts <- table(data[[var]], useNA = "no")  # Exclude NA from counts
+      levels_percent <- counts / sum(counts)  # Proportion
+      
+      # Create summary table
+      category_summary <- data.frame(
+        Variable = rep(categorical_var, length(counts)),
+        Statistic = paste0("lvl % : ", names(counts)),  # Clearer level labels
+        Value = as.numeric(levels_percent)  # Proportions, no *100
+      )
+      
+      if(length(names(counts)) == 2 & '1' %in% names(counts)){
+        category_summary <- category_summary[which(names(counts) == '1'),]
+      }
+      
+      summary_table <- rbind(summary_table, category_summary)
+    } else {
+      # Skip unsupported types
+      warning(paste("Variable", var, "is not numeric or categorical. Skipping."))
+    }
+  }
+  
+  rownames(summary_table) <- NULL
+  return(summary_table)
+}
+
+
+# Load required packages
+if (!require("statmod")) install.packages("statmod", quiet = TRUE)
+library(statmod)
+
+summarize_loss_premium <- function(data, loss_col, premium_col, distribution = "normal") {
+  # Validate input
+  if (!is.data.frame(data)) stop("Input `data` must be a data frame.")
+  if (!(loss_col %in% colnames(data))) stop("Loss column not found in data.")
+  if (!(premium_col %in% colnames(data))) stop("Premium column not found in data.")
+  
+  # Filter non-NA values
+  valid_data <- data[!is.na(data[[loss_col]]) & !is.na(data[[premium_col]]), ]
+  if (nrow(valid_data) == 0) stop("No valid data after removing NA values.")
+  
+  # Initialize summary table
+  summary_table <- data.frame(Variable = character(), Statistic = character(), Value = numeric(), stringsAsFactors = FALSE)
+  
+  # Add summaries for loss and premium
+  loss_summary <- calculate_summary(valid_data[[loss_col]], "Loss", summary_functions = c('%0', 'mean'))
+  severity_summary <- calculate_summary(valid_data[[loss_col]][valid_data[[loss_col]] > 0], "Severity", summary_functions = c('mean', '0.95', 'TVaR 0.95'))
+  premium_summary <- calculate_summary(valid_data[[premium_col]], "Premium", summary_functions = c('0.05', 'mean', '0.95'))
+  
+  # Add MAE (Mean Absolute Error)
+  mae <- mean(abs(valid_data[[loss_col]] - valid_data[[premium_col]]), na.rm = TRUE)
+  perf_summary_temp <- data.frame(Variable = "Performance metrics of price", Statistic = "MAE", Value = mae)
+  
+  # Calculate deviance
+  deviance <- switch(
+    tolower(distribution),
+    "normal" = {
+      value <- mean((valid_data[[loss_col]] - valid_data[[premium_col]])^2)
+      label <- "Normal"
+      list(value = value, label = label)
+    },
+    "poisson" = {
+      if (any(valid_data[[premium_col]] <= 0)) stop("Premiums must be > 0 for Poisson.")
+      value <- 2 * sum(valid_data[[loss_col]] * log(valid_data[[loss_col]] / valid_data[[premium_col]]) - 
+                         (valid_data[[loss_col]] - valid_data[[premium_col]]), na.rm = TRUE)
+      label <- "Poisson"
+      list(value = value, label = label)
+    },
+    "binary" = {
+      if (any(valid_data[[loss_col]] < 0 | valid_data[[loss_col]] > 1)) stop("Losses must be in [0,1] for binary.")
+      value <- -2 * sum(
+        valid_data[[loss_col]] * log(valid_data[[premium_col]]) + 
+          (1 - valid_data[[loss_col]]) * log(1 - valid_data[[premium_col]]), 
+        na.rm = TRUE
+      )
+      label <- "Binary"
+      list(value = value, label = label)
+    },
+    "tweedie" = {
+      if (!requireNamespace("statmod", quietly = TRUE)) stop("Install the 'statmod' package for Tweedie distribution.")
+      p <- statmod::tweedie.profile(valid_data[[loss_col]] ~ valid_data[[premium_col]])$p.max
+      value <- sum(
+        statmod::tweedie.dev(valid_data[[loss_col]], valid_data[[premium_col]], p = p),
+        na.rm = TRUE
+      )
+      label <- "Tweedie"
+      list(value = value, label = label)
+    },
+    stop("Unsupported distribution type. Choose from 'normal', 'poisson', 'binary', or 'tweedie'.")
+  )
+  perf_summary <- rbind(perf_summary_temp, data.frame(Variable = "Performance metrics of price",
+                                                      Statistic = paste0('Dev. ', deviance$label),
+                                                      Value = deviance$value))
+  
+  # Combine all summaries
+  summary_table <- rbind(loss_summary, severity_summary, premium_summary, perf_summary)
+  rownames(summary_table) <- NULL
+  
+  return(summary_table)
+}
+
+
+
+# Load required package for Wasserstein distance
+if (!requireNamespace("transport", quietly = TRUE)) install.packages("transport", quiet = TRUE)
+library(transport)
+
+summarize_loss_n_price_per_group <- function(data, loss_col, premium_col, protected_group_col, pdx_col, 
+                                             levels = c(0, 1)) {
+  # Validate input
+  required_cols <- c(loss_col, premium_col, protected_group_col, pdx_col)
+  if (!all(required_cols %in% colnames(data))) stop("Some required columns are not in the dataset.")
+  if (length(levels) != 2) stop("The 'levels' argument must specify exactly two levels for the protected group.")
+  
+  # Filter non-NA values
+  valid_data <- data[complete.cases(data[, required_cols]), ]
+  if (nrow(valid_data) == 0) stop("No valid data after removing NA values.")
+  
+  # Check which specified levels are present
+  present_levels <- levels[levels %in% unique(valid_data[[protected_group_col]])]
+  
+  # Initialize the summary output
+  summary_table <- data.frame(Variable = character(), Statistic = character(), Value = numeric(), stringsAsFactors = FALSE)
+  
+  # Premium statistics mean
+  for (group in levels) {
+    if (group %in% present_levels) {
+      group_data <- valid_data[valid_data[[protected_group_col]] == group, ]
+      premium_data <- group_data[[premium_col]]
+      
+      # Premium summaries
+      premium_summary <- calculate_summary(premium_data,
+                                           paste0("Mean price"),
+                                           summary_functions = 'mean')
+      premium_summary$Statistic <- paste0('D=', group)
+      summary_table <- rbind(summary_table, premium_summary)
+      
+    } else {
+      # Add NA rows for missing group
+      na_summary <- data.frame(Variable = "Mean price", Statistic = paste0('D=', group),
+                               Value = NA, stringsAsFactors = FALSE)
+      summary_table <- rbind(summary_table, na_summary)
+      
+    }
+  }
+  
+  # Premium statistics Var0.95
+  for (group in levels) {
+    if (group %in% present_levels) {
+      group_data <- valid_data[valid_data[[protected_group_col]] == group, ]
+      premium_data <- group_data[[premium_col]]
+      loss_data <- group_data[[loss_col]]
+      
+      # Premium summaries
+      premium_summary <- calculate_summary(premium_data,
+                                           paste0("VaR 0.95 of price"),
+                                           summary_functions = '0.95')
+      premium_summary$Statistic <- paste0('D=', group)
+      summary_table <- rbind(summary_table, premium_summary)
+      
+    } else {
+      # Add NA rows for missing group
+      na_summary <- data.frame(Variable = "VaR 0.95 of price",
+                               Statistic = paste0('D=', group),
+                               Value = NA, stringsAsFactors = FALSE)
+      summary_table <- rbind(summary_table, na_summary)
+      
+    }
+  }
+  
+  # Loss Ratio
+  for (group in levels) {
+    if (group %in% present_levels) {
+      group_data <- valid_data[valid_data[[protected_group_col]] == group, ]
+      premium_data <- group_data[[premium_col]]
+      loss_data <- group_data[[loss_col]]
+      
+      # Premium summaries
+      loss_ratio <- mean(loss_data, na.rm = TRUE) / mean(premium_data, na.rm = TRUE)
+      loss_ratio_summary <- data.frame(
+        Variable = "Loss Ratio",
+        Statistic = paste0("D=", group),
+        Value = loss_ratio
+      )
+      summary_table <- rbind(summary_table, loss_ratio_summary)
+      
+    } else {
+      # Add NA rows for missing group
+      na_summary <- data.frame(Variable = "Mean price", Statistic = paste0('D=', group),
+                               Value = NA, stringsAsFactors = FALSE)
+      summary_table <- rbind(summary_table, na_summary)
+      
+    }
+  }
+  
+  # Average propensity
+  propensity <- mean(ifelse(group_data[[protected_group_col]] == 1, 
+                            group_data[[pdx_col]], 
+                            1 - group_data[[pdx_col]]), na.rm = TRUE)
+  propensity_summary <- data.frame(
+    Variable = "P(D=1|X)",
+    Statistic = "Mean",
+    Value = propensity
+  )
+  summary_table <- rbind(summary_table, propensity_summary)
+  
+  
+  # Compute Wasserstein distance for the specified levels if both are present
+  if (all(levels %in% present_levels)) {
+    group_a <- valid_data[valid_data[[protected_group_col]] == levels[1], premium_col]
+    group_b <- valid_data[valid_data[[protected_group_col]] == levels[2], premium_col]
+    
+    # Check if both groups have sufficient observations
+    if (length(group_a) > 5 && length(group_b) > 5) {
+      wd <- wasserstein1d(group_a, group_b)
+    } else {
+      wd <- NA  # Assign NA if one or both groups have insufficient data
+    }
+  } else {
+    # If one or both levels are missing, output NA for Wasserstein
+    wd <- NA
+  }
+  
+  # Add Wasserstein Distance to the Summary Table
+  wd_summary <- data.frame(
+    Variable = "Wasserstein Distance",
+    Statistic = paste(levels[1], "vs", levels[2]),
+    Value = wd
+  )
+  summary_table <- rbind(summary_table, wd_summary)
+  
+  rownames(summary_table) <- NULL
+  
+  return(summary_table)
+}
+
+
+
+
+
+
+summarize_fairness_spectrum <- function(data, fairness_cols, spectrum_labels = NULL, summary_functions = c('mean')) {
+  # Validate input
+  if (!is.data.frame(data)) stop("Input `data` must be a data frame.")
+  if (!all(fairness_cols %in% colnames(data))) stop("Some specified fairness columns are not in the dataset.")
+  if (!is.null(spectrum_labels) && length(spectrum_labels) != length(fairness_cols)) {
+    stop("The length of 'spectrum_labels' must match the length of 'fairness_cols'.")
+  }
+  
+  # Use column names as default labels if spectrum_labels is not provided
+  if (is.null(spectrum_labels)) spectrum_labels <- fairness_cols
+  
+  # Initialize the summary output
+  summary_table <- data.frame(Variable = character(), Statistic = character(), Value = numeric(), stringsAsFactors = FALSE)
+  
+  # Loop over specified fairness columns in the order provided
+  for (i in seq_along(fairness_cols)) {
+    fairness_col <- fairness_cols[i]
+    spectrum_label <- spectrum_labels[i]
+    
+    # Ensure the column is numeric
+    if (!is.numeric(data[[fairness_col]])) {
+      warning(paste("Fairness column", fairness_col, "is not numeric. Skipping."))
+      next
+    }
+    
+    # Calculate summaries and append to the summary table
+    fairness_summary <- calculate_summary(data[[fairness_col]], spectrum_label, summary_functions)
+    summary_table <- rbind(summary_table, fairness_summary)
+  }
+  
+  rownames(summary_table) <- NULL
+  return(summary_table)
+}
+
+summarize_local_measures <- function(data,
+                                     split_measures = 'proxy_vuln',
+                                     whole_pop_measures = c('risk_spread', 'fair_range', 'parity_cost'),
+                                     protected_group_col,
+                                     summary_functions = c('mean', 'TVaR 0.95')) {
+  # Validate input
+  required_cols <- c(split_measures, whole_pop_measures, protected_group_col)
+  if (!all(required_cols %in% colnames(data))) stop("Some required columns are not in the dataset.")
+  
+  # Filter non-NA values
+  valid_data <- data[complete.cases(data[, required_cols]), ]
+  if (nrow(valid_data) == 0) stop("No valid data after removing NA values.")
+  
+  # Initialize the summary output
+  summary_table <- data.frame(Variable = character(), Statistic = character(), Value = numeric(), stringsAsFactors = FALSE)
+  
+  ### split_measures
+  the_levels <- unique(valid_data[[protected_group_col]])
+  for (smry_fn in summary_functions) {
+    for (split_meas in split_measures) {
+      for (i in 1:(length(the_levels) + 1)) {
+        if(i == 1){
+          summary_all_data <- calculate_summary(valid_data[[split_meas]], 'temp', summary_functions = smry_fn)
+          summary_all_data$Variable <- paste0(summary_all_data$Statistic, ' of ', split_meas)
+          summary_all_data$Statistic <- 'All'
+          summary_table <- rbind(summary_table, summary_all_data)
+        } else {
+          j <- i - 1 
+          partial_data <- valid_data[[split_meas]][valid_data[[protected_group_col]] == the_levels[j]]
+          summary_protected <- calculate_summary(partial_data, 'temp', summary_functions = smry_fn)
+          summary_protected$Variable <- paste0(summary_protected$Statistic, ' of ',split_meas)
+          summary_protected$Statistic <- paste0('D=', the_levels[j])
+          summary_table <- rbind(summary_table, summary_protected)
+        }
+      } 
+    }
+  }
+  
+  for (other_meas in whole_pop_measures) {
+    summary_all_data <- calculate_summary(valid_data[[other_meas]], other_meas, summary_functions = 'mean')
+    summary_table <- rbind(summary_table, summary_all_data)
+  }
+  
+  rownames(summary_table) <- NULL
+  return(summary_table)
+}
+
+compute_sb0_sb1 <- function(data, mua_col, mub_col, d_col, pd) {
+  # Validate input
+  if (!is.data.frame(data)) stop("Input `data` must be a data frame.")
+  if (!(mua_col %in% colnames(data))) stop("mu_A column not found in the dataset.")
+  if (!(mub_col %in% colnames(data))) stop("mu_B column not found in the dataset.")
+  if (!(d_col %in% colnames(data))) stop("D column not found in the dataset.")
+  if (length(pd) != 2 || any(pd <= 0) || sum(pd) != 1) stop("PD must be a valid probability vector of length 2 summing to 1.")
+  
+  # Extract the columns
+  mu_A <- data[[mua_col]]
+  mu_B <- data[[mub_col]]
+  D <- data[[d_col]]
+  
+  # Compute mu_B0 and mu_B1
+  mu_B0 <- ifelse(D == 1, 
+                (mu_A - pd[2] * mu_B) / pd[1],  # Formula for mu_B0 when D = 1
+                mu_B)                          # mu_B0 = mu_B when D = 0
+  mu_B1 <- ifelse(D == 0, 
+                (mu_A - pd[1] * mu_B) / pd[2],  # Formula for mu_B1 when D = 0
+                mu_B)                          # mu_B1 = mu_B when D = 1
+  
+  # Return the modified dataset with mu_B0 and mu_B1
+  return(
+    list(mu_B0, mu_B1)
+  )
+}
+
+
+
+
+implied_propensity <- function(data, premium_col, mua_col, mub_col, d_col, pd){
+  sb0sb1 <- compute_sb0_sb1(data, mua_col = mua_col, mub_col = mub_col, d_col = d_col, pd = pd)
+  
+  return(
+    (data[[premium_col]] - sb0sb1[[1]])/(sb0sb1[[2]] - sb0sb1[[1]])
+  )
+}
+
+summarize_premium_spectrum <- function(data, premium_col,
+                                       mua_col,
+                                       mub_col,
+                                       group_col,
+                                       rank_col,
+                                       pd,
+                                       summary_functions = c('mean', 'TVaR 0.95')) {
+  # Validate input
+  required_cols <- c(premium_col, mua_col, mub_col, group_col, rank_col)
+  if (!all(required_cols %in% colnames(data))) stop("Some required columns are not in the dataset.")
+  
+  # Compute mu_B0 and mu_B1
+  sb0sb1 <- compute_sb0_sb1(data, mua_col = mua_col, mub_col = mub_col, d_col = group_col, pd = pd)
+  mu_B0 <- sb0sb1[[1]]
+  mu_B1 <- sb0sb1[[2]]
+  
+  # Compute Implied Propensity and Commercial Loading
+  implied_prop <- (data[[premium_col]] - mu_B0) / (mu_B1 - mu_B0)
+  commercial_loading <- data[[premium_col]] - data[[mua_col]]
+  
+  # Initialize summary output
+  summary_table <- data.frame(Variable = character(), Statistic = character(), Value = numeric(), stringsAsFactors = FALSE)
+  
+  the_levels <- unique(data[[group_col]])
+  
+  ## commercial loading
+  for (smry_fn in summary_functions) {
+    for (i in 1:(length(the_levels) + 1)) {
+      if(i == 1){
+        summary_all_data <- calculate_summary(commercial_loading, 'temp', summary_functions = smry_fn)
+        summary_all_data$Variable <- paste0(summary_all_data$Statistic, ' of comm. loading')
+        summary_all_data$Statistic <- 'All'
+        summary_table <- rbind(summary_table, summary_all_data)
+      } else {
+        j <- i - 1 
+        partial_data <- commercial_loading[data[[group_col]] == the_levels[j]]
+        summary_protected <- calculate_summary(partial_data, 'temp', summary_functions = smry_fn)
+        summary_protected$Variable <- paste0(summary_protected$Statistic, ' of comm. loading')
+        summary_protected$Statistic <- paste0('D=', the_levels[j])
+        summary_table <- rbind(summary_table, summary_protected)
+      }
+    } 
+  }
+  
+  ## propensity + rank
+  for (i in 1:(length(the_levels) + 1)) {
+    if(i == 1){
+      summary_all_data <- calculate_summary(implied_prop, 'temp', summary_functions = 'mean')
+      summary_all_data$Variable <- paste0(summary_all_data$Statistic, ' implied propensity')
+      summary_all_data$Statistic <- 'All'
+      summary_table <- rbind(summary_table, summary_all_data)
+    } else {
+      j <- i - 1 
+      partial_data <- implied_prop[data[[group_col]] == the_levels[j]]
+      summary_protected <- calculate_summary(partial_data, 'temp', summary_functions = 'mean')
+      summary_protected$Variable <- paste0(summary_protected$Statistic, ' implied propensity')
+      summary_protected$Statistic <- paste0('D=', the_levels[j])
+      summary_table <- rbind(summary_table, summary_protected)
+    }
+  } 
+  
+  for (i in 1:(length(the_levels) + 1)) {
+    if(i == 1){
+      summary_all_data <- calculate_summary(data[[rank_col]], 'temp', summary_functions = 'mean')
+      summary_all_data$Variable <- paste0(summary_all_data$Statistic, ' rank among spectrum')
+      summary_all_data$Statistic <- 'All'
+      summary_table <- rbind(summary_table, summary_all_data)
+    } else {
+      j <- i - 1 
+      partial_data <- data[[rank_col]][data[[group_col]] == the_levels[j]]
+      summary_protected <- calculate_summary(partial_data, 'temp', summary_functions = 'mean')
+      summary_protected$Variable <- paste0(summary_protected$Statistic, ' rank among spectrum')
+      summary_protected$Statistic <- paste0('D=', the_levels[j])
+      summary_table <- rbind(summary_table, summary_protected)
+    }
+  } 
+
+  
+  rownames(summary_table) <- NULL
+  
+  
+  return(summary_table)
+}
+
+
+summarize_vulnerability <- function(data, premium_col, mua_col, group_col, thresholds = NULL) {
+  # Validate input
+  required_cols <- c(premium_col, mua_col, group_col)
+  if (!all(required_cols %in% colnames(data))) stop("Some required columns are not in the dataset.")
+  
+  # Compute implied commercial adjustment relative to mu_A
+  commercial_adjustment <- (data[[premium_col]] - data[[mua_col]]) / data[[mua_col]]
+  
+  # Initialize summary output
+  summary_table <- data.frame(Variable = character(), Statistic = character(), Value = numeric(), stringsAsFactors = FALSE)
+  
+  if(is.null(thresholds)){
+    thresholds <- round(c(0, quantile(commercial_adjustment, c(0.65, 0.75))), 3)
+  }
+  
+  the_levels <- unique(data[[group_col]])
+  
+  # Calculate % of people exceeding each threshold
+  for (threshold in thresholds) {
+    for (i in 1:(length(the_levels) + 1)) {
+      if(i == 1){
+        percentage <- mean(commercial_adjustment > threshold, na.rm = TRUE)
+        vulnerability_summary <- data.frame(
+          Variable = paste0("% of ppl. with (Comm. load)/(Aware)>", threshold * 100, "%"),
+          Statistic = paste("All"),
+          Value = percentage
+        )
+        summary_table <- rbind(summary_table, vulnerability_summary)
+      } else {
+        j <- i - 1 
+        partial_data <- commercial_adjustment[data[[group_col]] == the_levels[j]]
+        percentage <- mean(partial_data > threshold, na.rm = TRUE)
+        vulnerability_summary <- data.frame(
+          Variable = paste0("% of ppl. with (Comm. load)/(Aware)>", threshold * 100, "%"),
+          Statistic = paste0('D=', the_levels[j]),
+          Value = percentage
+        )
+        summary_table <- rbind(summary_table, vulnerability_summary)
+      }
+    }
+  }
+
+  
+  rownames(summary_table) <- NULL
+  return(summary_table)
+}
+
+
+summarize_fairness_table <- function(data, group_col, marg_dist,
+                                     sensitive_variable,
+                                     top_bottom_summary = c(3, 3),
+                                     demographics_variables = c("D", "X2", "X1")) {
+  # Validate input
+  if (!is.data.frame(data)) stop("Input `data` must be a data frame.")
+  if (!all(group_col %in% c("1", colnames(data)))) 
+    stop("All group_col values must be '1' or valid column names in the dataset.")
+  if (!sensitive_variable %in% colnames(data)) 
+    stop("The `sensitive_variable` must be a valid column name in the dataset.")
+  
+  # Preprocess demographic variables to limit levels to max 4 (including "Other")
+  preprocess_factors <- function(data, variables) {
+    for (var in variables) {
+      if (var %in% colnames(data) && (is.factor(data[[var]]) || is.character(data[[var]]))) {
+        counts <- table(data[[var]], useNA = "no")
+        counts <- sort(counts, decreasing = TRUE)
+        
+        if (length(counts) > 4) {
+          top_3_levels <- names(head(counts, 3))
+          data[[var]] <- factor(
+            ifelse(data[[var]] %in% top_3_levels, data[[var]], "Other"),
+            levels = c(top_3_levels, "Other")
+          )
+        } else {
+          data[[var]] <- factor(data[[var]], levels = names(counts))
+        }
+      }
+    }
+    return(data)
+  }
+  
+  # Apply preprocessing
+  data <- preprocess_factors(data, demographics_variables)
+  
+  # Fetch levels of the sensitive variable
+  sensitive_levels <- levels(factor(data[[sensitive_variable]]))
+  
+  # Helper function to tag sections
+  add_section <- function(summary_table, section_name) {
+    summary_table$Section <- section_name
+    return(summary_table)
+  }
+  
+  # List of summary functions
+  summary_functions <- list(
+    "Demographics" = function(subdata) summarize_demographics(subdata,
+                                                              sensitive = sensitive_variable,
+                                                              variables = demographics_variables,
+                                                              summary_functions = c('mean', 'std')),
+    "Loss and commercial price" = function(subdata) summarize_loss_premium(subdata,
+                                                                           loss_col = "Y",
+                                                                           premium_col = "prem",
+                                                                           distribution = 'normal'),
+    "Loss and price per group" = function(subdata) summarize_loss_n_price_per_group(
+      subdata, loss_col = "Y", premium_col = "prem",
+      protected_group_col = sensitive_variable, pdx_col = "pdx",
+      levels = sensitive_levels
+    ),
+    "Local Measures" = function(subdata) summarize_local_measures(
+      subdata, split_measures = c("proxy_vuln"),
+      whole_pop_measures = c("risk_spread", "fair_range", "parity_cost"),
+      protected_group_col = sensitive_variable
+    ),
+    "Fairness Spectrum" = function(subdata) summarize_fairness_spectrum(subdata,
+                                                                        fairness_cols = c("mu_B", "mu_U", "mu_A", "mu_H", "mu_C"),
+                                                                        summary_functions = c('mean'),
+                                                                        spectrum_labels = c('Best-est.', 'Unaware', 'Aware',
+                                                                                            'Hyperaware', 'Corrective')),
+    "Fairness implications of commercial price" = function(subdata) summarize_premium_spectrum(
+      subdata, premium_col = "prem", mua_col = "mu_A", mub_col = "mu_B", group_col = sensitive_variable, rank_col = "r", pd = marg_dist
+    ),
+    "Vulnerability" = function(subdata) summarize_vulnerability(
+      subdata, premium_col = "prem", mua_col = "mu_A",
+      group_col = sensitive_variable,
+      thresholds = round(c(0, quantile((data$prem - data$mu_A)/data$mu_A, c(0.65, 0.75))), 3) )
+  )
+  
+  # Initialize list to hold all summaries
+  all_summaries <- list()
+  
+  # edit group_col. build multiple table : full, full-middle, pruned
+  
+  #dictionnary_leaves_trees
+  #dictionnary_leaves_trees_comm
+  
+  the_filters <- list('1' = rep(1, nrow(data)),
+                      'proxy' = dictionnary_proxy)
+  
+  for (gr in setdiff(group_col, '1')) {
+    data[['g']] <- as.numeric(as.character(data[[gr]]))
+    data <- left_join(data, dictionnary_proxy$rpart$dict,
+                      by = c('g' = 'pred')) 
+    data[[paste0(gr, '_node_new')]] <- data$node_new
+    data[[paste0(gr, '_node_or')]] <- data$node_or
+    data$g <- NULL; data$node_new <- NULL; data$node_or <- NULL;
+  }
+  
+  
+  # Loop over each variable in group_col
+  for (col in group_col) {
+    if (col == "1") {
+      subdata <- data
+      summary_table <- do.call(
+        rbind,
+        lapply(names(summary_functions), function(section) {
+          add_section(summary_functions[[section]](subdata), section)
+        })
+      )
+      summary_table <- summary_table %>%
+        rename_with(~ paste0("All Data"), starts_with("Value"))
+      all_summaries[["All Data"]] <- summary_table
+    } else {
+      levels <- levels(factor(data[[col]]))
+      for (level in levels) {
+        subdata <- data[data[[col]] == level, ]
+        summary_table <- do.call(
+          rbind,
+          lapply(names(summary_functions), function(section) {
+            add_section(summary_functions[[section]](subdata), section)
+          })
+        )
+        summary_table <- summary_table %>%
+          rename_with(~ paste0(names(group_col)[which(group_col == col)], " - ", level), starts_with("Value"))
+        key <- paste0(col, " - ", level)
+        all_summaries[[key]] <- summary_table
+      }
+    }
+  }
+  
+  # Combine summaries while preserving section order
+  section_order <- names(summary_functions)
+  final_table <- Reduce(function(x, y) dplyr::left_join(x, y, by = c("Section", "Variable", "Statistic")), all_summaries) %>%
+    dplyr::mutate(Section = factor(Section, levels = section_order)) %>%  # Enforce order
+    dplyr::arrange(Section)  # Sort by Section
+  
+  # Ensure column order
+  ordered_col_names <- c("Section", "Variable", "Statistic", setdiff(names(final_table), c("Section", "Variable", "Statistic")))
+  final_table <- final_table[, ordered_col_names]
+  return(final_table)
+}
+
+summarize_fairness_groups <- function(data, 
+                                      group_col,
+                                      marg_dist,
+                                      sensitive_variable,
+                                      dictionnary_proxy,
+                                      dictionnary_comm,
+                                      demographics_variables = c("D", "X2", "X1")) {
+  
+  # Define a helper function to process each group type
+  process_group <- function(data, group_type, dict_proxy, dict_comm) {
+    # Map proxy vulnerable groups
+    data[[paste0("pg_", group_type)]] <- factor(
+      predict(dict_proxy$model, newdata = data, type = 'node') %>% unname,
+      levels = dict_proxy$dict$node_or,
+      labels = dict_proxy$dict$node_new
+    )
+    
+    # Regroup proxy groups if needed
+    if (group_type == "regrouped") {
+      levels(data[[paste0("pg_", group_type)]]) <- recode_bottom_top_middle(levels(data[[paste0("pg_", group_type)]]))
+    }
+    
+    # Map commercially loaded groups
+    data[[paste0("cg_", group_type)]] <- factor(
+      predict(dict_comm$model, newdata = data, type = 'node') %>% unname,
+      levels = dict_comm$dict$node_or,
+      labels = dict_comm$dict$node_new
+    )
+    
+    # Regroup commercial groups if needed
+    if (group_type == "regrouped") {
+      levels(data[[paste0("cg_", group_type)]]) <- recode_bottom_top_middle(levels(data[[paste0("cg_", group_type)]]))
+    }
+    
+    # Generate the fairness summary table
+    group_col = c(
+      "All data" = "1",
+      "Proxy vulnerable groups" = paste0("pg_", group_type),
+      "Commercially loaded groups" = paste0("cg_", group_type)
+    )
+    big_tab <- summarize_fairness_table(
+      data = data,
+      group_col = group_col,
+      sensitive_variable = sensitive_variable,
+      marg_dist = marg_dist
+    )
+    
+    # Add a row for "Leaf composition"
+    to_add_to_big_tab_full <- rep(NA, ncol(big_tab))
+    names(to_add_to_big_tab_full) <- names(big_tab)
+    
+    # Extract the node labels for proxy and commercial groups
+    the_nms_p <- names(big_tab)[grepl(names(group_col[2]), names(big_tab))]
+    the_nms_c <- names(big_tab)[grepl(names(group_col[3]), names(big_tab))]
+    
+    the_nodes_new_p <- str_split(the_nms_p, "-", n = 2) %>%
+      lapply(function(pieces) pieces[2]) %>%
+      unlist()
+    the_nodes_new_c <- str_split(the_nms_c, "-", n = 2) %>%
+      lapply(function(pieces) pieces[2]) %>%
+      unlist()
+    
+    the_nodes_or_p <- sapply(as.numeric(the_nodes_new_p), function(node_new_id) {
+      if (is.na(node_new_id)) return(NA)
+      dict_proxy$dict %>% filter(node_new == node_new_id) %>% pull(node_or)
+    }) %>% unlist()
+    
+    the_nodes_or_c <- sapply(as.numeric(the_nodes_new_c), function(node_new_id) {
+      if (is.na(node_new_id)) return(NA)
+      dict_comm$dict %>% filter(node_new == node_new_id) %>% pull(node_or)
+    }) %>% unlist()
+    
+    # Simplify paths for nodes
+    the_nodes_path_simp_p <- sapply(the_nodes_or_p, function(node_or) {
+      if (is.na(node_or)) return(NA)
+      dict_proxy$paths$simp_concat[[as.character(node_or)]]
+    })
+    
+    the_nodes_path_simp_c <- sapply(the_nodes_or_c, function(node_or) {
+      if (is.na(node_or)) return(NA)
+      dict_comm$paths$simp_concat[[as.character(node_or)]]
+    })
+    
+    # Add paths to the final row of the summary table
+    to_add_to_big_tab_full[the_nms_p] <- the_nodes_path_simp_p
+    to_add_to_big_tab_full[the_nms_c] <- the_nodes_path_simp_c
+    
+    return(list('table' = big_tab,
+                'paths' = to_add_to_big_tab_full))
+  }
+  
+  # Process each group type
+  suppressWarnings({
+    suppressMessages({
+      big_tab_f_full <-process_group(data, "full",
+                                     dictionnary_proxy$rpart,
+                                     dictionnary_comm$rpart)
+      big_tab_r_full <- process_group(data, "regrouped",
+                                      dictionnary_proxy$rpart,
+                                      dictionnary_comm$rpart)
+      big_tab_p_full <- process_group(data, "pruned", 
+                                      dictionnary_proxy$rpart_prune,
+                                      dictionnary_comm$rpart_prune) 
+    })
+  })
+
+
+  
+  # Return all three summary tables in a list
+  return(list(
+    "All subgroups" = big_tab_f_full,
+    "Top-Bottom subgroups" = big_tab_r_full,
+    "Coarse groups" = big_tab_p_full
+  ))
+}
+
+
+library(openxlsx)
+
+export_to_excel <- function(summary_tables,
+                            file_name = "summary.xlsx") {
+  
+  # Create a new workbook
+  wb <- createWorkbook()
+  
+  for (i in seq_along(summary_tables)) {
+    summary_table <- summary_tables[[i]]$table
+    sheet_name <- names(summary_tables)[i]
+    to_add <- summary_tables[[i]]$paths
+    
+    # Ensure sheet name is a valid character
+    sheet_name <- enc2native(as.character(sheet_name))
+    
+    # Ensure all column names in the workbook are properly encoded
+    colnames(summary_table) <- enc2native(as.character(colnames(summary_table)))
+    
+    # Add a worksheet
+    addWorksheet(wb, sheet_name)
+    
+    # Extract column names and split into groups and labels
+    original_colnames <- colnames(summary_table)
+    split_names <- strsplit(original_colnames, " - ", fixed = TRUE)
+    groups <- sapply(split_names, function(x) ifelse(length(x) > 1, x[1], ""))  # Left part
+    labels <- sapply(split_names, function(x) ifelse(length(x) > 1, x[2], x[1]))  # Right part
+    
+    # Write the second header row (labels)
+    writeData(wb, sheet_name, t(labels), startRow = 2, colNames = FALSE)
+    
+    # Write the first header row (groups) and merge cells for groups
+    for (group in unique(groups)) {
+      if (group != "") {
+        matching_cols <- which(groups == group)  # Columns in the same group
+        mergeCells(wb, sheet_name, cols = matching_cols, rows = 1)  # Merge cells for the group
+        writeData(wb, sheet_name, group, startCol = min(matching_cols),
+                  startRow = 1, colNames = FALSE)
+      }
+    }
+    
+    # Write the main data below the headers
+    writeData(wb, sheet_name, summary_table, startRow = 3, colNames = FALSE)
+    
+    
+    # Apply a new theme for the headers
+    header_style_1 <- createStyle(
+      fontSize = 14, fontColour = the_CAS_colors_full[6], fgFill = the_CAS_colors_full[4], 
+      halign = "CENTER", textDecoration = "Bold", border = "Bottom", borderColour = "black", borderStyle = "thick"
+    )
+    header_style_2 <- createStyle(
+      fontSize = 12, fontColour = the_CAS_colors_full[6], fgFill = the_CAS_colors_full[4], 
+      halign = "CENTER", textDecoration = "Bold"
+    )
+    addStyle(wb, sheet_name, style = header_style_1, rows = 1, cols = 1:ncol(summary_table), gridExpand = TRUE, stack = TRUE)
+    addStyle(wb, sheet_name, style = header_style_2, rows = 2, cols = 1:ncol(summary_table), gridExpand = TRUE, stack = TRUE)
+    
+    # Merge vertically consecutive cells in the first two columns
+    for (col in 1:2) {  # Only for Section and Variable columns
+      values <- summary_table[[col]]
+      start_row <- 3  # Data starts at row 3
+      for (i in seq_along(values)) {
+        if (i == 1 || values[i] != values[i - 1]) {
+          start_merge <- start_row + i - 1
+        }
+        if (i == length(values) || values[i] != values[i + 1]) {
+          end_merge <- start_row + i - 1
+          mergeCells(wb, sheet_name, cols = col, rows = start_merge:end_merge)
+        }
+      }
+    }
+    
+    # Apply vertical alignment and rotation styles to the first two columns
+    vertical_align_style <- createStyle(halign = "CENTER", valign = "CENTER", 
+                                        wrapText = TRUE)
+    rotated_style <- createStyle(
+      textRotation = 90, 
+      halign = "CENTER", 
+      valign = "CENTER", 
+      wrapText = TRUE
+    )
+    # Apply rotation to the first column (Section)
+    addStyle(wb, sheet_name, style = rotated_style, rows = 3:(nrow(summary_table) + 2), cols = 1, gridExpand = TRUE, stack = TRUE)
+    # Apply vertical alignment to the second column (Variable)
+    addStyle(wb, sheet_name, style = vertical_align_style, rows = 3:(nrow(summary_table) + 2), cols = 2, gridExpand = TRUE, stack = TRUE)
+    
+    # Add alternating row colors based on blocks of the 'Variable' column
+    variable_groups <- rle(as.character(summary_table$Variable))  # Group consecutive 'Variable' values
+    start_row <- 3  # Data starts at row 3
+    group_starts <- cumsum(c(start_row, head(variable_groups$lengths, -1)))
+    group_ends <- group_starts + variable_groups$lengths - 1
+    
+    # Apply alternating styles to blocks
+    for (i in seq_along(group_starts)) {
+      group_rows <- group_starts[i]:group_ends[i]
+      if (i %% 2 == 0) {  # Alternate colors
+        addStyle(
+          wb, sheet_name, 
+          style = createStyle(fgFill = "grey85"),  # Light gray for even groups
+          rows = group_rows, 
+          cols = 3:ncol(summary_table), 
+          gridExpand = TRUE
+        )
+      } else {
+        addStyle(
+          wb, sheet_name, 
+          style = createStyle(fgFill = "white"),  # Light gray for even groups
+          rows = group_rows, 
+          cols = 3:ncol(summary_table), 
+          gridExpand = TRUE
+        )
+      }
+    }
+    
+    # Add vertical borders for column groups
+    for (group in unique(groups)) {
+      if (group != "") {
+        matching_cols <- which(groups == group)
+        left_border_style <- createStyle(border = "Left", borderColour = "black", borderStyle = "thick")
+        right_border_style <- createStyle(border = "Right", borderColour = "black", borderStyle = "thick")
+        addStyle(wb, sheet_name, style = left_border_style, rows = 1:(nrow(summary_table) + 2), cols = min(matching_cols), gridExpand = TRUE, stack = TRUE)
+        addStyle(wb, sheet_name, style = right_border_style, rows = 1:(nrow(summary_table) + 2), cols = max(matching_cols), gridExpand = TRUE, stack = TRUE)
+      }
+    }
+    
+    # Add bold horizontal lines after groups of rows (based on the `Section` column)
+    unique_sections <- unique(summary_table$Section)
+    for (section in unique_sections) {
+      group_rows <- which(summary_table$Section == section) + 2  # Offset for header rows
+      last_row <- max(group_rows)
+      horizontal_line_style <- createStyle(border = "Bottom", borderColour = "black", borderStyle = "thick")
+      addStyle(wb, sheet_name, style = horizontal_line_style, rows = last_row, cols = 1:ncol(summary_table), gridExpand = TRUE, stack = TRUE)
+    }
+    
+    # Apply number formatting for numeric columns (round to 2 decimal places for display)
+    numeric_cols <- which(sapply(summary_table, is.numeric))  # Identify numeric columns
+    if (length(numeric_cols) > 0) {
+      number_format_style <- createStyle(numFmt = "0.00")
+      addStyle(wb, sheet_name, style = number_format_style, rows = 3:(nrow(summary_table) + 2), cols = numeric_cols, gridExpand = TRUE, stack = TRUE)
+    }
+    
+    # Apply 2-digit number formatting for 'Fairness Spectrum' rows
+    pct_rows <- which(grepl('%', summary_table$Variable) | grepl('%', summary_table$Statistic)) + 2
+    integer_rows <- which(grepl('Observations', summary_table$Variable)) + 2
+    digits3_rows <- which(grepl('Loss Ratio', summary_table$Variable) | grepl('Wasserstein', summary_table$Variable)) + 2
+    
+    # Define styles for formatting
+    pct_style <- createStyle(numFmt = "0.00%")           # Percentage with 2 decimal places
+    integer_style <- createStyle(numFmt = "0")          # Integer format
+    digits3_style <- createStyle(numFmt = "0.000")      # Decimal with 3 digits
+    
+    # Apply percentage format
+    if (length(pct_rows) > 0) {
+      addStyle(
+        wb,
+        sheet = sheet_name,
+        style = pct_style,
+        rows = pct_rows,
+        cols = 4:ncol(summary_table),  # Apply to numeric columns
+        gridExpand = TRUE,
+        stack = TRUE
+      )
+    }
+    
+    # Apply integer format
+    if (length(integer_rows) > 0) {
+      addStyle(
+        wb,
+        sheet = sheet_name,
+        style = integer_style,
+        rows = integer_rows,
+        cols = 4:ncol(summary_table),  # Apply to numeric columns
+        gridExpand = TRUE,
+        stack = TRUE
+      )
+    }
+    
+    # Apply 3-decimal format
+    if (length(digits3_rows) > 0) {
+      addStyle(
+        wb,
+        sheet = sheet_name,
+        style = digits3_style,
+        rows = digits3_rows,
+        cols = 4:ncol(summary_table),  # Apply to numeric columns
+        gridExpand = TRUE,
+        stack = TRUE
+      )
+    }
+    
+    loss_rows <- which(summary_table$Variable == 'Loss Ratio')
+    premium_rows <- which(summary_table$Variable == 'Mean price')
+    proxy_rows <- which(summary_table$Variable == 'Mean of proxy_vuln')
+    cload_rows <- which(summary_table$Variable == 'Mean of comm. loading')
+    
+    matched_rows <- c(loss_rows, premium_rows, proxy_rows, cload_rows) + 2
+    
+    cols <- 5:(ncol(summary_table) + 1)
+    
+    # Apply conditional formatting for each matched row
+    for (row in matched_rows) {
+      
+      # Verify that cols and rows are numeric and valid
+      if (!is.numeric(cols) || !is.numeric(row)) {
+        stop("Columns and rows must be numeric.")
+      }
+      
+      conditionalFormatting(
+        wb,
+        sheet = sheet_name,
+        cols = cols, rows = row,
+        type = 'colourScale',
+        style = c("#91CF60", "#FFFFBF", "#FC8D59")
+      )
+    }
+    
+    # Auto-adjust column widths and set a smaller width for the first column
+    setColWidths(wb, sheet_name, cols = 1, widths = 5)  # Smaller width for the Section column
+    setColWidths(wb, sheet_name, cols = 2, widths = 15)  # Smaller width for the Section column
+    setColWidths(wb, sheet_name, cols = 3, widths = 8)  # Smaller width for the Section column
+    setColWidths(wb, sheet_name, cols = 4:ncol(summary_table), widths = 8)
+    
+    
+    ## Add custom content 
+    # Write the custom row directly to the sheet
+    start_row <- nrow(summary_table) + 3
+    writeData(wb, sheet_name, t(to_add %>% unname),
+              startRow = start_row,
+              startCol = 1, colNames = FALSE)
+    
+    # Create a style for the custom row
+    custom_style <- createStyle(
+      fgFill = "grey90",     # Light grey background
+      fontColour = "grey50", # Dark grey text
+      wrapText = TRUE,       # Enable text wrapping
+      valign = "TOP",      # Center vertical alignment,
+      halign = 'LEFT',
+      textDecoration = "Bold"
+    )
+    
+    # Apply the style to the custom row
+    addStyle(
+      wb, sheet = sheet_name, style = custom_style,
+      rows = start_row, cols = 1:(length(to_add)),
+      gridExpand = TRUE, stack = TRUE
+    )
+    
+    # Adjust the row height for the new row (taller row for long text)
+    setRowHeights(wb, sheet_name, rows = start_row, heights = 60)
+    
+    
+    # Freeze the first 3 columns and the first 2 rows
+    freezePane(wb, sheet_name, firstActiveRow = 5, firstActiveCol = 4)
+  }
+  
+  # Save the workbook to a file
+  saveWorkbook(wb, file_name, overwrite = TRUE)
+  message("Summary table successfully exported to: ", file_name)
+}
+
+
+library(dplyr)
+
+# Generate a gradient of 5 colors between two given colors
+generate_gradient <- function(start_color, end_color, n = 5) {
+  scales::gradient_n_pal(c(start_color, end_color))(seq(0, 1, length.out = n))
+}
+
+
+recode_bottom_top_middle <- function(levels, numeric = FALSE, n_bottom = 3, n_top = 3, factor_values = NULL) {
+  # Check if input is valid
+  if (is.null(levels) || length(levels) < 1) {
+    stop("Input levels must be a non-empty numeric vector.")
+  }
+  
+  # Ensure levels are numeric
+  levels <- as.numeric(levels)
+  
+  # If numeric = TRUE, factor_values must be provided
+  if (numeric && (is.null(factor_values) || length(factor_values) < 1)) {
+    stop("For numeric = TRUE, a valid 'factor_values' vector must be provided.")
+  }
+  
+  # Handle cases where the total number of levels is insufficient for grouping
+  if (length(levels) <= (n_bottom + n_top + 1)) {
+    return(factor(levels, levels = as.character(levels))) # No middle group possible
+  }
+  
+  # Define the bottom and top ranges dynamically based on the original order
+  bottom <- levels[1:n_bottom]  # First `n_bottom` values
+  top <- levels[(length(levels) - n_top + 1):length(levels)]  # Last `n_top` values
+  middle <- levels[!(levels %in% c(bottom, top))]  # Remaining middle
+  
+  # Dynamically create label for the middle group
+  if (length(middle) > 1) {
+    if (numeric) {
+      # Subset the factor_values for rows where the levels belong to the middle group
+      middle_values <- factor_values[factor_values %in% middle]
+      middle_mean <- round(mean(as.numeric(as.character(middle_values)), na.rm = TRUE), 3) # Compute mean
+      middle_label <- middle_mean
+    } else {
+      middle_label <- paste0(min(middle), "-", max(middle)) # Range as label
+    }
+  } else if (length(middle) == 1) {
+    middle_label <- as.character(middle)  # Single value retains its original label
+  } else {
+    middle_label <- NULL
+  }
+  
+  # Create a mapping for novel levels
+  recoded <- sapply(levels, function(x) {
+    if (x %in% bottom) return(as.character(x))       # Keep bottom levels as is
+    if (x %in% middle) return(as.character(middle_label)) # Group middle levels dynamically
+    if (x %in% top) return(as.character(x))          # Keep top levels as is
+  })
+  
+  # Return as a factor with ordered levels maintaining the original order
+  return(factor(recoded, levels = unique(recoded), ordered = TRUE))
+}
+
+```
+
+```{r producing-the-summary-tables}
+#| code-fold: true
+#| code-summary: Code to export the summary tables
+#| warning: false
+#| message: true
+if (!dir.exists('tables')) dir.create('tables')
+
+for (scenario in names(group_pop_stats)) {
+  data <- group_pop_stats[[scenario]]$valid
+  
+  
+  # Extract dictionaries
+  dictionnary_proxy <- dictionnary_leaves_trees$proxy_vuln[[scenario]]
+  dictionnary_comm <- dictionnary_leaves_trees$comm_load[[scenario]]
+  
+  export_to_excel(summary_tables = summarize_fairness_groups(
+  data = data %>% mutate(D = factor(D), X2 = factor(X2)),
+  marg_dist = marg_dist[[scenario]],
+  sensitive_variable = "D",
+  dictionnary_proxy = dictionnary_proxy,
+  dictionnary_comm = dictionnary_comm),
+  file_name = paste0('tables/summaries_', scenario, '.xlsx'))
+}
+
+```
+
+## Download Disparity Tables
+
+::: {.callout-note}
+You can download the Excel disparity tables for each scenario below.
+:::
+
+<div class="d-flex flex-wrap gap-3">
+
+  <a href="../ebook/tables/summaries_Scenario1.xlsx" class="btn btn-outline-primary" role="button" download>
+    ⬇ Scenario 1
+  </a>
+
+  <a href="tables/summaries_Scenario2.xlsx" class="btn btn-outline-secondary" role="button" download>
+    ⬇ Scenario 2
+  </a>
+
+  <a href="tables/summaries_Scenario3.xlsx" class="btn btn-outline-warning" role="button" download>
+    ⬇ Scenario 3
+  </a>
+
+</div>
+
+
+ ![Summary of the methodology of the paper](figs/flowchart_estimating_spectrum.png){#fig-bigchart width=100%}

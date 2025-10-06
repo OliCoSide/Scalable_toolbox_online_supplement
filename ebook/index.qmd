@@ -7,8 +7,8 @@ This online supplement provides code and reproducible examples for the article t
 ## Paper on TBD
 
 The paper is available on TBD:
- 
-[Pre-print submitted to the CAS reasearch paper series on race and insurance pricing](https://www.casact.org/publications-research/research/research-paper-series-race-and-insurance-pricing)
+
+{{< ai arxiv >}}  <https://arxiv.org/abs/2501.15549>
 
 :::
 
@@ -20,9 +20,9 @@ All the codes are written in R.
 
 ## Scripts
 
-The {{< fa brands r-project >}} scripts associated with this online supplement are available in the ebook folder on the GitHub repository of this paper: 
+The {{< fa brands r-project >}} scripts associated with this ebook are available in the script folder on the GitHub repository of this paper: 
 
-{{< fa brands github >}} <https://github.com/olicoside/Scalable_toolbox_online_supplement>
+{{< fa brands github >}} <https://github.com/olicoside/CAS_scalable_toolbox_suppl>
 
 :::
 
@@ -31,16 +31,44 @@ The {{< fa brands r-project >}} scripts associated with this online supplement a
 ## Executive summary
 
 
+According to actuarial standards of practice, insurance pricing relies on grouping policyholders by risk to set adequate premiums. Modern predictive models, especially machine learning, excel at detecting statistical associations to differentiate risks, but they can learn spurious or undesired correlations. This raises concerns when socioeconomic or demographic factors may (intentionally or inadvertently) affect the fairness of insurance pricing.
+
+Fairness in insurance is difficult to operationalize due to its ambiguity. Fairness metrics from the machine learning literature lack the segment-specific relevance actuaries require and are expressed in abstract units that obscure real-world consequences. For actuaries to intervene, proxy effects and unfair biases must be quantified in insurance-relevant terms: dollars and people.
+
+In this paper, we focus on fairness in actuarial pricing. We study the situation where insurance rates should be fair with respect to a categorical (or discretized) sensitive variable, such as race or economic status, and the latter is fully observed (despite the possible privacy challenges). Our main contributions are listed below.
+
+  - We argue that actuarial fairness, solidarity, and causality form the three core dimensions of fairness in insurance pricing:
+      * **Actuarial fairness** aligns premiums with expected losses, mitigating cross-subsidies,
+      * **Solidarity** aligns premiums across protected groups, mitigating disparities, 
+      * **Causality** ensures models capture only true risk factors, mitigating proxy effects.
+  - We translate these dimensions into a five-point spectrum of premiums:
+    * The **best-estimate** premium is the most accurate predictor of losses using all available information, including the sensitive variable,
+    * The **unaware** premium is the most accurate predictor of losses using all information except the sensitive variable,
+    * The **aware** premium is the most accurate predictor of losses when controlling for the sensitive variable,
+    * The **hyperaware** premium is the most accurate approximation of the corrective premium that does not directly discriminate on the sensitive variable,
+    * The **corrective** premium is the most accurate predictor that enforces similar premium distributions across levels of the sensitive variable. 
+  - We define actuarially relevant local metrics that quantify the monetary impact of unfairness at the policyholder level.
+    * Proxy vulnerability is the difference between unaware and aware premiums. It locally measures how much the allowed variables pick up the signal of a missing sensitive variable.
+  - We define post pricing local metrics to evaluate the fairness of any pricing structure relative to the estimated spectrum.
+  - We partition policyholders to expose the segments in which unfair discrimination is most severe.
+  - We integrate these components into a fairness assessment framework that identifies which segments to investigate (via partitioning) and what to measure.
+  - We illustrate our approach with a large case study inspired by industry practice. The analysis relies a real dataset of 768,000 vehicles insured in Québec (2016--2017), covering at-fault material damage claims. We examine the fairness of a pseudo commercial price with respect to discretized credit score: low (vulnerable group) vs high.
+    * Proxy vulnerability is both material and skewed: while most policyholders may receive a modest rebate, a vulnerable minority of them could face 15--30\% overpricing if the regulation only requires that the sensitive variable be omitted,
+    * Our illustration of the integrated framework (@sec-integrated) illustrates that fairness in insurance pricing can be assessed efficiently, with minimal analyst effort. The framework provides simultaneous diagnostics from the three fairness dimensions, translates unfairness into dollar terms at the individual level, and highlights disparities across population segments.
+Designed for routine portfolio monitoring, our toolbox delivers valuable insights whether or not the sensitive attribute is included in pricing, provided it is available for assessment.  The toolbox's scalability, across large datasets and rich covariate sets, makes fairness operationalizable for actuaries: intuitive, practical, and encompassing the three fairness dimensions.
+
+**Keywords**: Dimensions of fairness; Practical benchmarking; Systematic disparity detection; Comprehensive framework; Operationalizable fairness;
+
 ## Outline
 
-This ebook contains three chapters:
+This online supplement contains six chapters:
 
-1. [Chapter -@sec-simul-dataset]: Presentation of the three scenarios for the simulated example.
-2. [Chapter -@sec-training]: Estimating the spectrum from simulations.
-3. [Chapter -@sec-dim]: Illustration of the dimensions of fairness.
-4. [Chapter -@sec-local]: Local metrics of fairness
-5. [Chapter -@sec-partition]: Presentation of the three scenarios for the simulated example.
-6. [Chapter -@sec-integrated]: Estimating the spectrum from simulations.
+    - @sec-simul-dataset: Defines the three scenarios and their simulation setup.
+    - @sec-training: Describes how to estimate the premium spectrum from simulated data.
+    - @sec-dim: Measures and visualizes the three fairness dimensions.
+    - @sec-local: Derives pre- and post-pricing fairness metrics, including proxy vulnerability.
+    - @sec-partition: Identifies systemic unfairness via partitioning, with repeated experiments.
+    - @sec-integrated: Presents a unified approach for fairness assessment and monitoring.
 
 
 

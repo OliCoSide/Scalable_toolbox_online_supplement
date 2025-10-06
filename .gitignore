@@ -1,3 +1,6 @@
 /.quarto/
 .Rhistory
 /.Rproj.user
+/ebook/preds
+/ebook/simuls
+*.json

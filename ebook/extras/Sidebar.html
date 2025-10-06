@@ -1,0 +1,51 @@
+
+
+<style>
+#progress-bar {
+  height: 4px;
+  background: #004A8D;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  width: 0%;
+  transition: width 0.2s ease-out;
+}
+</style>
+
+<script>
+document.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+  const progress = (scrollTop / docHeight) * 100;
+  document.getElementById('progress-bar').style.width = progress + '%';
+});
+</script>
+
+<div id="progress-bar"></div>
+
+<div style="
+  position: fixed;
+  top: 450px;
+  left: 0;
+  padding: 0.75em 1em;
+  background: #f3f4f6;
+  border-right: 1px solid #dddddd;
+  border-radius: 12px 0 0 12px;
+  font-size: 0.90em;
+  font-family: 'Helvetica Neue', sans-serif;
+  box-shadow: 4px 4px 8px rgba(0,0,0,0.08);
+  z-index: 1000;
+  max-width: 260px;
+">
+  <a href="https://olicoside.github.io/" target="_blank" style="
+    text-decoration: none;
+    color: #004A8D;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+  ">
+    <img src="img/logo_cas.png" alt="CAS Logo" style="max-width: 32px; margin-right: 0.4em;" />
+    Open main paper 🔗
+  </a>
+</div>

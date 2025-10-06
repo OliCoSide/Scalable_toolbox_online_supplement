@@ -1,0 +1,824 @@
+# Adult Dataset {#sec-adult}
+
+:::{.callout-note}
+
+## Objectives
+
+
+We apply the two methods presented in [Chapter -@sec-toy-dataset] to build counterfactuals for a categorical feature, as in [Chapter -@sec-german-credit.
+
+The illustration is made on a second real world dataset, the Adult Income dataset from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/2/adult).
+
+
+:::
+
+```{r, echo=FALSE}
+# in the console, to be able to display pseudocodes:
+# quarto add leovan/quarto-pseudocode
+
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    if (grep(x = color, "^#")) {
+      color <- deparse(substitute(color))
+    }
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color,
+            x)
+  } else x
+}
+
+col_0 <- "red"
+col_1 <- "blue"
+```
+
+
+```{r}
+library(tidyverse)
+library(devtools)
+library(ggtern)
+# load the functions from our package to perform optimal transport on 
+# compositional data
+load_all("../../")
+```
+
+```{r define-theme_paper}
+#| code-fold: true
+#| code-summary: Definition of a ggplot2 theme.
+#' Theme for ggplot2
+#'
+#' @param ... arguments passed to the theme function
+#' @export
+#' @importFrom ggplot2 element_rect element_text element_blank element_line unit
+#'   rel
+theme_paper <- function(...) {
+  theme(
+    text = element_text(family = "Times New Roman"),
+    plot.background = element_rect(fill = "transparent", color = NA),
+    legend.text = element_text(size = rel(1.1)),
+    legend.title = element_text(size = rel(1.1)),
+    legend.background = element_rect(
+     fill = "transparent", linetype="solid", colour ="black"),
+    legend.position = "bottom",
+    legend.direction = "horizontal",
+    legend.box = "vertical",
+    legend.key = element_blank(),
+    panel.spacing = unit(1, "lines"),
+    plot.title = element_text(hjust = 0, size = rel(1.3), face = "bold"),
+    plot.title.position = "plot",
+    strip.background = element_rect(fill = NA, colour = NA),
+    strip.text = element_text(size = rel(1.1))
+  )
+}
+```
+
+
+## The Dataset
+
+```{r load-adult}
+#| message: false
+#| warning: false
+library(fairml)
+data(adult)
+```
+
+
+<!-- ```{r download-and-load-adult} -->
+<!-- download_data <- FALSE -->
+<!-- if (download_data) { -->
+<!--   if (!dir.exists("../data/")) dir.create("../data/") -->
+<!--   download.file( -->
+<!--     url = "https://archive.ics.uci.edu/static/public/2/adult.zip", -->
+<!--     destfile = str_c("../data/adult.zip") -->
+<!--   ) -->
+<!-- } -->
+
+<!-- adult <- read_csv( -->
+<!--   file = unz("../data/adult.zip", "adult.data"), -->
+<!--   col_names = c( -->
+<!--     "age", "workclass", "fnlwgt", "education", "education-num", -->
+<!--     "marital-status", "occupation", "relationship", "race", "sex", -->
+<!--     "capital-gain", "capital-loss", "hours-per-week", "native-country", -->
+<!--     "income" -->
+<!--   ), -->
+<!--   show_col_types = FALSE -->
+<!-- ) |> -->
+<!--   rename( -->
+<!--     marital_status = "marital-status", -->
+<!--     hours_per_week = "hours-per-week" -->
+<!--   ) -->
+<!-- ``` -->
+
+
+
+
+We want to build counterfactual values for the variable 
+The categorical variable for which we want to build counterfactuals for the `marital_status` variable for women, had they been men. These are the raw categories:
+```{r show-marital-status}
+adult |> pull(marital_status) |> table()
+```
+Let us regroup these categories in three: (i) married, (ii) never married, (iii) separated.
+```{r}
+adult <- 
+  adult |> 
+  mutate(
+    marital_status = case_when(
+      marital_status %in% c(
+        "Married-AF-spouse", "Married-civ-spouse"
+      ) ~ "Married",
+      marital_status %in% c(
+        "Divorced", "Separated", "Widowed", "Married-spouse-absent"
+      ) ~ "Separated",
+      marital_status %in% c("Never-married") ~ "Never-married",
+      TRUE ~ "error"
+    ),
+    marital_status = factor(marital_status)
+  )
+```
+
+
+The global proportions in the dataset for each category of marital status:
+```{r show-prop-marital-status}
+prop.table(adult |> pull(marital_status) |> table())
+```
+
+And if we compare by gender:
+```{r}
+#| code-fold: true
+#| code-summary: Codes to create the Table.
+#| tbl-cap: Proportions of each marital status for women and for men.
+#| label: tbl-adult-proportions
+prop_marital <- 
+  adult |> 
+  count(sex, marital_status) |> 
+  group_by(sex) |> 
+  mutate(prop = n / sum(n)) |> 
+  select(-n) |> 
+  pivot_wider(names_from = marital_status, values_from = prop)
+prop_marital |> 
+  kableExtra::kbl(
+    booktabs = TRUE, digits = 4,
+  ) |> 
+  kableExtra::kable_paper() |> 
+  kableExtra::add_header_above(c(" " = 1, "Proportions" = 3))
+```
+
+
+## Estimation of Scores
+
+We fit four models, $\widehat{m}^{(k)}(\mathbf{x}_j|\mathbf{x}_{-j})$, using a multinomial loss, yielding predicted scores $\widehat{\mathbf{x}}_{j}^{(k)}\in\mathcal{S}_d$ for $k \in \{1,2,3,4\}$. The sensitive attribute $s$. The income variable is also removed. The four models are:
+
+- **GAM-MLR (1):** A multinomial model with splines for two continuous variables and a third variable.
+- **GAM-MLR (2):** A multinomial model with adidtional variables.
+- **Random Forest:** A classifier using all available variables.
+- **Gradient Boosting Model:** A GBM trained on all available variables.
+
+The estimation of GAM-MLR (1):
+```{r train-gam-mlr-1}
+library(splines)
+require(nnet)
+set.seed(123)
+model_glm_1 <- multinom(
+  marital_status ~ bs(age) + bs(hours_per_week) + occupation, 
+  data = adult |> select(-sex, -income)
+)
+```
+
+The estimation of GAM-MLR (2):
+```{r train-gam-mlr-2, message=FALSE, warning=FALSE}
+model_glm_2 <- multinom(
+  marital_status ~ bs(age) + bs(hours_per_week) + occupation + relationship +
+    workclass + bs(education_num) + education + bs(capital_gain),
+  data = adult |> select(-sex, -income)
+)
+```
+
+The estimation of the random forest:
+```{r load-randomForest, message=FALSE, warning=FALSE}
+library(randomForest)
+```
+
+```{r train-rf, message=FALSE, warning=FALSE, eval=FALSE}
+model_rf <- randomForest(
+  marital_status ~ ., data = adult |> select(-sex, -income)
+)
+```
+
+```{r, eval=FALSE}
+save(model_rf, file = "../output/model_rf_adult.rda")
+```
+
+```{r}
+load( "../output/model_rf_adult.rda")
+```
+
+The estimation of the gradient boosting model:
+```{r load-gbm, message=FALSE, warning=FALSE}
+library(gbm)
+library(caret)
+```
+
+```{r train-gbm, message=FALSE, warning=FALSE, eval=FALSE}
+model_gbm <- gbm(
+  marital_status ~.,
+  data = adult |> select(-sex, -income),
+  distribution = "multinomial",
+  cv.folds = 10,
+  shrinkage = .01,
+  n.minobsinnode = 10,
+  n.trees = 2000
+)
+```
+
+```{r, eval=FALSE}
+save(model_gbm, file = "../output/model_gbm_adult.rda")
+```
+
+```{r}
+load( "../output/model_gbm_adult.rda")
+```
+
+Now that we have estimated the four models, we can extract the estimates scores $\widehat{\mathbf{x}}_{j}^{(k)}\in\mathcal{S}_d$:
+
+
+```{r evaluate-scores}
+scores_glm_1 <- predict(model_glm_1, type = "probs")
+scores_glm_2 <- predict(model_glm_2, type = "probs")
+scores_rf <- predict(model_rf, type = "prob")
+scores_gbm <- predict.gbm(
+  object = model_gbm,
+  newdata = adult |> select(-sex, -income),
+  n.trees = 2000,
+  type = "response")
+scores_gbm <- scores_gbm[ , , 1]
+```
+
+
+Let us have a look at the predicted scores of four individuals (2 women, 2 men), for each model. 
+```{r tb_four_indiv}
+#| code-fold: true
+#| code-summary: Codes to create the Table.
+#| tbl-cap: Mappings from the `marital_status` categorical variable $x$ to the compositional one $\tilde{\mathbf{x}}$, for four individuals of the dataset.
+#| label: tbl-four-indiv
+print_highlighted_obs <- function(scores) {
+  ind_highlight <- c(1, 2, 5, 6)
+  tb <- adult |>
+    select(marital_status, sex) |> 
+    bind_cols(scores) |> 
+    slice(ind_highlight)
+  row.names(tb) <- NULL
+  tb
+}
+
+tb_four_indiv <- 
+  print_highlighted_obs(scores_glm_1) |> mutate(model = "glm_1") |> 
+  bind_rows(
+    print_highlighted_obs(scores_glm_2) |> mutate(model = "glm_2")
+  ) |> 
+  bind_rows(
+    print_highlighted_obs(scores_rf) |> mutate(model = "rf")
+  ) |> 
+  bind_rows(
+    print_highlighted_obs(scores_gbm) |> mutate(model = "gbm")
+  ) |> 
+  mutate(
+    model = factor(
+      model, 
+      levels = c("glm_1", "glm_2", "rf", "gbm"),
+      labels = c("GAM-MLR(1)", "GAM-MLR(2)", "Random Forest", 
+                 "Gradient Boosting Model")
+    )
+  ) |> 
+  relocate(model, .before = marital_status)
+
+tb_four_indiv |> select(-model) |> 
+  kableExtra::kbl(
+    booktabs = TRUE, digits = 4,
+  ) |> 
+  kableExtra::kable_paper() |> 
+  kableExtra::add_header_above(c(" " = 2, "Predicted Scores" = 3)) |> 
+  kableExtra::pack_rows(index = table(tb_four_indiv$model))
+```
+
+
+## Optimal Transport in the Euclidean Representation
+
+We can now apply [Algorithm 1.1](application-toydataset.qmd#alg-1) with a Gaussian mapping in an Euclidean representation space to transport from observed $\widehat{\mathbf{x}}_j|s=0$ (scores for women) to counterfactual $\widehat{\mathbf{x}}_j|s=1$ (scores for men), in $\mathcal{S}_d$.
+
+:::{.callout-warning}
+
+### Subset
+
+We will work on a subset of the data here for the transport. Also, if the number is too large, the returned weights tend to be all equal to 1...
+
+:::
+
+```{r}
+set.seed(1234)
+idx <- sample(1:nrow(adult),size = 400)
+adult_subset <- adult[idx, ]
+```
+
+Let us isolate women and men:
+```{r define-ind_0}
+ind_0 <- which(adult_subset$sex == "Female")
+ind_1 <- which(adult_subset$sex == "Male")
+```
+
+Then, we create matrices for each model with the predicted scores for each category, i.e., the representation of the categorical variable `marital_status` in the unit simplex.
+
+```{r define-X0_glm_1}
+# GAM-MLR(1)
+X0_glm_1 <- scores_glm_1[idx, ][ind_0, ]
+X1_glm_1 <- scores_glm_1[idx, ][ind_1, ]
+# GAM-MLR(2)
+X0_glm_2 <- scores_glm_2[idx, ][ind_0,]
+X1_glm_2 <- scores_glm_2[idx, ][ind_1,]
+# RF
+X0_rf <- scores_rf[idx, ][ind_0, ]
+X1_rf <- scores_rf[idx, ][ind_1, ]
+# GBM
+X0_gbm <- scores_gbm[idx, ][ind_0, ]
+X1_gbm <- scores_gbm[idx, ][ind_1, ]
+```
+
+For the random forest and the gradient boosting model, we add a tiny bit to scores exactly equal to zero and substract the same tiny bit to scores exactly equal to one.
+```{r}
+# RF
+for(i in 1:3) X0_rf[which(X0_rf[, i] == 0), i] = .0000001
+for(i in 1:3) X0_rf[which(X0_rf[, i] == 1), i] = 1-.0000001
+for(i in 1:3) X1_rf[which(X1_rf[, i] == 0), i] = .0000001
+for(i in 1:3) X1_rf[which(X1_rf[, i] == 1), i] = 1-.0000001
+# GBM
+for(i in 1:3) X0_gbm[which(X0_gbm[, i] == 0), i] = .0000001
+for(i in 1:3) X0_gbm[which(X0_gbm[, i] == 1), i] = 1-.0000001
+for(i in 1:3) X1_gbm[which(X1_gbm[, i] == 0), i] = .0000001
+for(i in 1:3) X1_gbm[which(X1_gbm[, i] == 1), i] = 1-.0000001
+```
+
+
+Then, we can apply [Algorithm 1.1](application-toydataset.qmd#alg-1) to each set of predicted scores. We use the clr transform and Gaussian OT:
+```{r apply-alg-1}
+transp_glm_1 <- transport_simplex(X0 = X0_glm_1, X1 = X1_glm_1, n_interp = 31)
+transp_glm_2 <- transport_simplex(X0 = X0_glm_2, X1 = X1_glm_2, n_interp = 31)
+transp_rf <- transport_simplex(X0 = X0_rf, X1 = X1_rf, n_interp = 31)
+transp_gbm <- transport_simplex(X0 = X0_rf, X1 = X1_gbm, n_interp = 31)
+```
+
+We can then have a look at the percentage of each purpose category in the initial dataset, compare it with the average predicted score of each category for each model, and with the average of the transported predicted score for women.
+
+
+```{r}
+#| code-fold: true
+#| code-summary: Codes to create the Table.
+#| fig-cap: Optimal transport using the clr transformation, and Gaussian optimal transports, on the _purpose_ scores in the _German Credit_ database, with two logistic GAM models to predict scores, a random forest, and a boosting model. For observed values, the observed proportions of purpose categories are reported by gender. Then, for each model, the average of predicted scores by gender for each categories are shown (Composition). Lastly, the average of transported predicted scores for women are reported (Transported).
+#| label: tbl-german-counterfactuals
+
+# Proportions of each purpose level by gender in the dataset
+prop_marital <- 
+  adult |> 
+  count(marital_status, sex) |> 
+  group_by(sex) |> 
+  mutate(prop = n / sum(n)) |> 
+  select(-n) |> 
+  pivot_wider(names_from = marital_status, values_from = prop) |> 
+  mutate(type = "Categorical")
+
+get_table_pred_transp <- function(scores, transp_scores) {
+  # Average predicted scores for each purpose level by gender
+  mean_scores_by_gender <- 
+    adult_subset |> 
+    select(marital_status, sex) |> 
+    bind_cols(scores) |> 
+    group_by(sex) |> 
+    summarise(across(colnames(!!scores), ~mean(.x))) |> 
+    mutate(type = "Composition")
+  
+  # Average predicted transported score of women for each purpose level
+  mean_transp_scores_women <- colMeans(transp_scores) |> 
+    as_tibble_row() |>
+    mutate(type = "Transported", sex = "Female -> Male")
+  
+  mean_scores_by_gender |> 
+    bind_rows(mean_transp_scores_women)
+}
+
+tb_pred_transp_mean <-
+  prop_marital |> mutate(model = "obs") |> 
+  bind_rows(
+    get_table_pred_transp(scores_glm_1[idx, ], transp_glm_1) |> 
+      mutate(model = "glm_1")
+  ) |> 
+  bind_rows(
+    get_table_pred_transp(scores_glm_2[idx, ], transp_glm_2) |> mutate(model = "glm_2")
+  ) |> 
+  bind_rows(
+    get_table_pred_transp(scores_rf[idx, ], transp_rf) |> mutate(model = "rf")
+  ) |> 
+  bind_rows(
+    get_table_pred_transp(scores_gbm[idx, ], transp_gbm) |> mutate(model = "gbm")
+  ) |> 
+  mutate(
+    model = factor(
+      model, 
+      levels = c("obs", "glm_1", "glm_2", "rf", "gbm"),
+      labels = c(
+        "Observed Values",
+        "GAM-MLR(1)", "GAM-MLR(2)", "Random Forest", 
+        "Gradient Boosting Model"
+      )
+    )
+  ) |> 
+  relocate(model, .before = sex) |> 
+  relocate(type, .after = model)
+
+tb_pred_transp_mean |> select(-model) |> 
+  kableExtra::kbl(
+  booktabs = TRUE, digits = 4,
+) |> 
+  kableExtra::kable_paper() |> 
+  kableExtra::add_header_above(c(" " = 2, "Marital Status" = 3)) |> 
+  kableExtra::pack_rows(index = table(tb_pred_transp_mean$model))
+
+```
+
+### Visualization of Transported Categories
+
+We can then show the counterfactuals on a ternary plot, and graph the displacement interpolation when generationg from the factual (women) to the counterfactuals (men).
+
+First, we format the paths:
+
+```{r}
+transp_glm_1_path <- interpolated(transp_glm_1) |> 
+  list_rbind(names_to = "id_obs")
+transp_glm_2_path <- interpolated(transp_glm_2) |> 
+  list_rbind(names_to = "id_obs")
+transp_rf_path <- interpolated(transp_rf) |> 
+  list_rbind(names_to = "id_obs")
+transp_gbm_path <- interpolated(transp_gbm) |> 
+  list_rbind(names_to = "id_obs")
+```
+
+Then, we can show, for each model, the representation in the simplex of the categorical variable `marital_status`, by gender (`r colorize("women in red", "red")` and `r colorize("men in blue", "blue")`), as well as the displacement interpolation.
+
+```{r}
+#| code-fold: true
+#| code-summary: Codes to create the Figure.
+#| fig-cap: Optimal Transport using clr transform. Points in <span style="color:red;">red</span> are compositions for <span style="color:red;">women</span>, whereas points in <span style="color:blue;">blue</span> are compositions for <span style="color:blue;">men</span>. The lines indicate the displacement interpolation when generating counterfactuals.
+#| label: fig-ternary-displacement
+#| fig-height: 8
+#| fig-width: 8
+scores_all <- as_tibble(scores_glm_1[idx, ]) |> 
+  mutate(sex = adult_subset$sex, model = "glm_1") |> 
+  bind_rows(
+    as_tibble(scores_glm_2[idx, ]) |> 
+      mutate(sex = adult_subset$sex, model = "glm_2")
+  ) |> 
+  bind_rows(
+    as_tibble(as.data.frame(scores_rf[idx, ])) |> 
+      mutate(sex = adult_subset$sex, model = "rf")
+  ) |> 
+  bind_rows(
+    as_tibble(scores_gbm[idx, ]) |> 
+      mutate(sex = adult_subset$sex, model = "gbm")
+  ) |> 
+  mutate(
+    model = factor(
+      model, 
+      levels = c("obs", "glm_1", "glm_2", "rf", "gbm"),
+      labels = c(
+        "Observed Values",
+        "GAM-MLR(1)", "GAM-MLR(2)", "Random Forest", 
+        "Gradient Boosting Model"
+      )
+    )
+  )
+
+transp_all_path <- 
+  transp_glm_1_path |> 
+  mutate(
+    sex = factor("Female", levels = levels(adult_subset$sex)),
+    model = "glm_1"
+  ) |> 
+  bind_rows(
+    transp_glm_2_path |> 
+      mutate(
+        sex = factor("Female", levels = levels(adult_subset$sex)),
+        model = "glm_2"
+      ) 
+  ) |> 
+  bind_rows(
+    transp_rf_path |> 
+      mutate(
+        sex = factor("Female", levels = levels(adult_subset$sex)),
+        model = "rf"
+      ) 
+  ) |> 
+  bind_rows(
+    transp_gbm_path |> 
+      mutate(
+        sex = factor("Female", levels = levels(adult_subset$sex)),
+        model = "gbm"
+      ) 
+  ) |> 
+  mutate(
+    model = factor(
+      model, 
+      levels = c("obs", "glm_1", "glm_2", "rf", "gbm"),
+      labels = c(
+        "Observed Values",
+        "GAM-MLR(1)", "GAM-MLR(2)", "Random Forest", 
+        "Gradient Boosting Model"
+      )
+    )
+  )
+
+ggtern(
+  data = scores_all,
+  mapping = aes(x = Married, y = Separated, z = `Never-married`, colour = sex)
+) +
+  geom_point(size = .1) +
+  geom_line(
+    data = transp_all_path, 
+    linewidth = .2, alpha = .8,
+    mapping = aes(group = id_obs)
+  ) +
+  scale_colour_manual(values = c("Female" = "red", "Male" = "blue"), guide = "none") +
+  facet_wrap(~model) +
+  labs(x = "Married", y = "Never-married", z = "Separated") +
+  theme_paper() +
+  theme(
+    tern.axis.title = element_text(size = rel(.8)),
+    tern.axis.arrow.show = TRUE,
+    tern.axis.arrow.sep = .13,
+    tern.axis.vshift = .05,
+  ) +
+  theme_hidetitles()
+```
+
+## Optimal Transport in $\mathcal{S}_3$
+
+Let us now use [Algorithm 1.2](application-toydataset.qmd#alg-2) to create counterfactuals using matching in $\mathcal{S}_3$.
+
+To that end, we use the `wasserstein_simplex()`{.R} function from our package.
+
+:::{.callout-warning}
+
+#### Note
+
+The codes are a bit long to run. Here, we load results saved from a previously evaluated code.
+
+:::
+
+```{r define-mapping_glm_1, eval=FALSE}
+mapping_glm_1 <- wasserstein_simplex(X0_glm_1, X1_glm_1)
+mapping_glm_2 <- wasserstein_simplex(X0_glm_2, X1_glm_2)
+mapping_rf <- wasserstein_simplex(X0_rf, X1_rf)
+mapping_gbm <- wasserstein_simplex(X0_gbm, X1_gbm)
+
+if (!dir.exists("../output/")) dir.create("../output/", recursive = TRUE)
+save(
+  mapping_glm_1, mapping_glm_2, mapping_rf, mapping_gbm,
+  file = "../output/matching_adult.rda"
+)
+```
+
+```{r}
+load("../output/matching_adult.rda")
+```
+
+
+We extract the estimated weights for all the individuals:
+
+```{r define-M0_glm_1}
+M0_glm_1 <- mapping_glm_1$plan * nrow(X0_glm_1)
+M0_glm_2 <- mapping_glm_2$plan * nrow(X0_glm_2)
+M0_rf <- mapping_rf$plan * nrow(X0_rf)
+M0_gbm <- mapping_gbm$plan * nrow(X0_gbm)
+```
+
+Let us focus on a single individual $x_{0,i}=$:
+```{r define-indiv-to-lookup}
+i <- 3
+```
+
+For each model, we extract the representation of the `marital_status` characteristic in the simplex (i.e., the predicted scores by the $k$-th model, $\widehat{m}^{(k)}(\mathbf{x}_j|\mathbf{x}_{-j})$). Let us denote this composition as $\mathbf{x}_{0,i}^{(k)}$
+```{r define-indiv_i_glm_1}
+indiv_i_glm_1 <- X0_glm_1[i, ]
+indiv_i_glm_2 <- X0_glm_2[i, ]
+indiv_i_rf <- X0_rf[i, ]
+indiv_i_gbm <- X0_gbm[i, ]
+```
+
+We then extract the weights $\mathbf{P}^{\star(k)}_i$:
+```{r define-weights_i_glm_1}
+weights_i_glm_1 <- M0_glm_1[i, ]
+weights_i_glm_2 <- M0_glm_2[i, ]
+weights_i_rf <- M0_rf[i, ]
+weights_i_gbm <- M0_gbm[i, ]
+```
+
+Lastly, we compute, for our individual, its counterfactual $T^\star(\mathbf{x}_{0,i})$, by simply computing the weighted average of the characteristics of the individuals from the other group.
+```{r define-cfact_i_glm_1}
+cfact_i_glm_1 <- weights_i_glm_1 %*% X1_glm_1
+cfact_i_glm_2 <- weights_i_glm_2 %*% X1_glm_2
+cfact_i_rf <- weights_i_rf %*% X1_rf
+cfact_i_gbm <- weights_i_gbm %*% X1_gbm
+```
+
+We can then plot (@fig-ternary-matching) the representation of the woman of interest obtained for each model (`r colorize("red dot", "red")`), and its counterfactual obtained by matching (`r colorize("blue dot", "blue")`). We also plot, on the ternary plot, all the `r colorize("women", "red")` and `r colorize("men", "blue")`. The size of the dots for `r colorize("men", "blue")` is proportional to the weights corresponding to the `r colorize("women of interest", "red")`.
+
+
+
+```{r}
+#| code-fold: true
+#| code-summary: Codes to create the Figure.
+#| fig-cap: Empirical matching of a <span style="color:red;">woman</span> $\mathbf{x}_{0,i}^{(k)}$ (<span style="color:red;">big red dot</span>) with <span style="color:blue;">men</span> (<span style="color:blue;">blue dots</span>). The Size of blue dots are proportional to the weights $\mathbf{P}^\star_i$. The <span style="color:blue;">counterfactual</span> obtained with matching $T^\star(\mathbf{x}_{0,i})$ is shown as a <span style="color:blue;">blue square</span>.
+#| label: fig-ternary-matching
+#| fig-height: 8
+#| fig-width: 8
+#| warning: false
+
+# Women
+tb_plot_females <- 
+  as_tibble(X0_glm_1) |> 
+  mutate(sex = "Female", model = "glm_1") |> 
+  bind_rows(
+    as_tibble(X0_glm_2) |> 
+      mutate(sex = "Female", model = "glm_2")
+  ) |> 
+  bind_rows(
+    as_tibble(X0_rf) |> 
+      mutate(sex = "Female", model = "rf")
+  ) |> 
+  bind_rows(
+    as_tibble(X0_gbm) |> 
+      mutate(sex = "Female", model = "gbm",)
+  ) |> 
+  mutate(
+    model = factor(
+      model, 
+      levels = c("obs", "glm_1", "glm_2", "rf", "gbm"),
+      labels = c(
+        "Observed Values",
+        "GAM-MLR(1)", "GAM-MLR(2)", "Random Forest", 
+        "Gradient Boosting Model"
+      )
+    )
+  )
+
+# Males individuals, with a column weights_i giving their weight used to 
+# construct the counterfactual for indiv i
+tb_plot_males <- 
+  as_tibble(X1_glm_1) |> 
+  mutate(
+    sex = "Male", model = "glm_1", weights_i = weights_i_glm_1
+  ) |> 
+  bind_rows(
+    as_tibble(X1_glm_2) |> 
+      mutate(
+        sex = "Male", model = "glm_2", weights_i = weights_i_glm_2
+      )
+  ) |> 
+  bind_rows(
+    as_tibble(X1_rf) |> 
+      mutate(
+        sex = "Male", model = "rf", weights_i = weights_i_rf
+      )
+  ) |> 
+  bind_rows(
+    as_tibble(X1_gbm) |> 
+      mutate(
+        sex = "Male", model = "gbm", weights_i = weights_i_rf
+      )
+  ) |> 
+  mutate(
+    model = factor(
+      model, 
+      levels = c("obs", "glm_1", "glm_2", "rf", "gbm"),
+      labels = c(
+        "Observed Values",
+        "GAM-MLR(1)", "GAM-MLR(2)", "Random Forest", 
+        "Gradient Boosting Model"
+      )
+    )
+  )
+
+indiv_i <- 
+  as_tibble_row(indiv_i_glm_1) |> mutate(sex = "Female", model = "glm_1") |> 
+  bind_rows(
+    as_tibble_row(indiv_i_glm_2) |> mutate(sex = "Female", model = "glm_2")
+  ) |> 
+  bind_rows(
+    as_tibble_row(indiv_i_rf) |> mutate(sex = "Female", model = "rf")
+  ) |> 
+  bind_rows(
+    as_tibble_row(indiv_i_gbm) |> mutate(sex = "Female", model = "gbm")
+  ) |> 
+  mutate(
+    model = factor(
+      model, 
+      levels = c("obs", "glm_1", "glm_2", "rf", "gbm"),
+      labels = c(
+        "Observed Values",
+        "GAM-MLR(1)", "GAM-MLR(2)", "Random Forest", 
+        "Gradient Boosting Model"
+      )
+    )
+  )
+
+cfact_indiv_i <- 
+  as_tibble(cfact_i_glm_1) |> mutate(sex = "Male", model = "glm_1") |> 
+  bind_rows(
+    as_tibble(cfact_i_glm_2) |> mutate(sex = "Male", model = "glm_2")
+  ) |> 
+  bind_rows(
+    as_tibble(cfact_i_rf) |> mutate(sex = "Male", model = "rf")
+  ) |> 
+  bind_rows(
+    as_tibble(cfact_i_gbm) |> mutate(sex = "Male", model = "gbm")
+  ) |> 
+  mutate(
+    model = factor(
+      model, 
+      levels = c("obs", "glm_1", "glm_2", "rf", "gbm"),
+      labels = c(
+        "Observed Values",
+        "GAM-MLR(1)", "GAM-MLR(2)", "Random Forest", 
+        "Gradient Boosting Model"
+      )
+    )
+  )
+
+ggtern(
+  mapping = aes(x = Married, y = Separated, z = `Never-married`, colour = sex)
+) +
+  geom_point(
+    data = tb_plot_females,
+    size = .1,
+    alpha = .6
+  ) +
+  geom_point(
+    data = tb_plot_males,
+    mapping = aes(size = weights_i),
+    alpha = .5
+  ) +
+  geom_point(data = indiv_i, size = 3, colour = "white") +
+  geom_point(data = indiv_i, size = 2) +
+  geom_point(data = cfact_indiv_i, size = 3, colour = "white", shape = 15) +
+  geom_point(data = cfact_indiv_i, size = 3, shape = 15) +
+  facet_wrap(~ model) +
+  labs(x = "Married", y = "Separated", z = "Never Married") +
+  scale_colour_manual(
+    values = c("Female" = "red", "Male" = "blue"), guide = "none"
+  ) +
+  scale_size_continuous(range = c(0, 1), guide = "none") +
+  theme_paper() +
+  theme(
+    tern.axis.title = element_text(size = rel(.8)),
+    tern.axis.arrow.show = TRUE,
+    tern.axis.arrow.sep = .13,
+    tern.axis.vshift = .05,
+  ) +
+  theme_hidetitles()
+```
+
+To finish, let us look more closely to the i-th woman for which we have shown the counterfactual on the ternary plot. The value of the `marital_status` variable for her is `r as.character(adult_subset[ind_0[i], "marital_status"])`:
+```{r show-purpose-woman-i}
+adult_subset[ind_0[i], "marital_status"]
+```
+
+Using the GAM-MLR(1) model, we obtained the following composition:
+```{r show-composition-woman}
+X0_glm_1[i, ]
+```
+
+The closest points in the group of men, obtained using [Algorithm 1.2](application-toydataset.qmd#alg-2) are:
+```{r define-ind_close_points}
+ind_close_points <- tail(order(weights_i_glm_1), 10)
+X1_glm_1[ind_close_points, ] |> 
+  as_tibble() |> 
+  mutate(
+    Purpose = adult_subset[ind_1[ind_close_points], ] |> select(marital_status),
+    index = ind_close_points,
+    weights_i = weights_i_glm_1[ind_close_points]) |> 
+  arrange(desc(weights_i)) |> 
+  kableExtra::kbl(booktabs = TRUE) |> 
+  kableExtra::kable_paper()
+```
+
+The counterfactual version for the composition is:
+```{r}
+cfact_i_glm_1
+```
+
+The counterfactual categorical value would thus be:
+```{r}
+colnames(cfact_i_glm_1)[which.max(cfact_i_glm_1)]
+```
+
+For comparison, using Gaussian OT, the counterfactual would be:
+```{r}
+transp_glm_1 |> slice(i)
+```
+
