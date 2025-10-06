@@ -278,5 +278,15 @@
     "crumbs": [
       "<span class='chapter-number'>6</span>  <span class='chapter-title'>Integrated framework</span>"
     ]
+  },
+  {
+    "objectID": "9_references.html",
+    "href": "9_references.html",
+    "title": "References",
+    "section": "",
+    "text": "Open main paper 🔗\n\n  \n\n\n\n\n\n\n\n\n\nChevalier, Dominik, and Marie-Pier Côté. 2024. “From Point to\nProbabilistic Gradient Boosting for Claim Frequency and Severity\nPrediction.” arXiv Preprint arXiv:2412.14916. https://arxiv.org/abs/2412.14916.\n\n\nCôté, Marie-Pier, Olivier Côté, and Arthur Charpentier. 2024.\n“Selection Bias in Insurance: Why Portfolio-Specific Fairness\nFails to Extend Market-Wide.” Available at SSRN: 10.2139/Ssrn.5018749.\n\n\nFernandes Machado, Agathe, Suzie Grondin, Philipp Ratz, Arthur\nCharpentier, and François Hu. 2025. “EquiPy: Sequential Fairness\nUsing Optimal Transport in Python.” arXiv Preprint arXiv:2503.09866. https://arxiv.org/abs/2503.09866.\n\n\nGrubinger, Thomas, Achim Zeileis, and Karl-Peter Pfeiffer. 2014.\n“Evtree: Evolutionary Learning of Globally Optimal Classification\nand Regression Trees in r.” Journal of Statistical\nSoftware 61 (1): 1–29. https://doi.org/10.18637/jss.v061.i01.\n\n\nHu, Francois, Philipp Ratz, and Arthur Charpentier. 2024. “A\nSequentially Fair Mechanism for Multiple Sensitive Attributes.”\nProceedings of the AAAI Conference on Artificial Intelligence\n38 (11): 12502–10. https://doi.org/10.1609/aaai.v38i11.29143.\n\n\nKe, Guolin, Qi Meng, Thomas Finley, Taifeng Wang, Wei Chen, Weidong Ma,\nQiwei Ye, and Tie-Yan Liu. 2017. “LightGBM: A Highly\nEfficient Gradient Boosting Decision Tree.” Advances in\nNeural Information Processing Systems 30: 3146–54.\n\n\nLindholm, Mathias, Ronald Richman, Andreas Tsanakas, and Mario V\nWüthrich. 2022. “Discrimination-Free Insurance Pricing.”\nASTIN Bulletin 52 (1): 55–89.\n\n\nLindholm, M., R. Richman, A. Tsanakas, and M. V. Wüthrich. 2024.\n“Sensitivity-Based Measures of Discrimination in Insurance\nPricing.” Available at SSRN: Ssrn.com/Abstract=4897265.",
+    "crumbs": [
+      "References"
+    ]
   }
 ]
