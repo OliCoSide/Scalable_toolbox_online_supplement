@@ -33,7 +33,7 @@ book:
   navbar:
     right:
       - icon: github
-        href: https://github.com/olicoside/CAS_scalable_toolbox_suppl
+        href: https://github.com/olicoside/Scalable_toolbox_online_supplement
         aria-label: GitHub
 
 bibliography: ./biblio.bib
