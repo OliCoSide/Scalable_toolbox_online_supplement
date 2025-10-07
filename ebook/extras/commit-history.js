@@ -1,6 +1,6 @@
 (function () {
-  const USER   = "olicoside";       // e.g., "olicoside"
-  const REPO   = "Scalable_toolbox_online_supplement";          // e.g., "Scalable_toolbox_online_supplement"
+  const USER   = "olicoside";
+  const REPO   = "Scalable_toolbox_online_supplement";
   const BRANCH = "main";
   const MAX    = 5;
 
@@ -11,8 +11,8 @@
   const slug = REPO.toLowerCase();
   let p = window.location.pathname.replace(/^\/+/, "");
 
-  // Strip "/REPO/" prefix on project pages (no effect on user/organization pages)
-  p = p.replace(new RegExp("^" + slug + "/"), "");
+  // Strip "/REPO/" prefix on project pages (case-insensitive)
+  p = p.replace(new RegExp("^" + slug + "/", "i"), "");
 
   // Default to index.html
   if (p === "" || p.endsWith("/")) p += "index.html";
@@ -34,7 +34,11 @@
       try {
         const r = await fetch(url);
         const data = await r.json();
-        if (Array.isArray(data) && data.length) {
+
+        // Handle API errors (e.g., rate limit)
+        if (!Array.isArray(data) || data.message) continue;
+
+        if (data.length) {
           box.innerHTML = data.map(c => {
             const msg  = (c.commit.message || "").split("\n")[0];
             const date = new Date(c.commit.author.date).toLocaleDateString();
@@ -43,13 +47,13 @@
                       <a href="${c.html_url}">${msg}</a>
                       <div class="muted">${date} • ${sha}</div>
                     </div>`;
-          }).join("") + 
+          }).join("") +
           `<div class="muted" style="margin-top:.25rem">
              <a href="https://github.com/${USER}/${REPO}/commits/${BRANCH}/${encodeURIComponent(path)}">Full history</a>
            </div>`;
           return;
         }
-      } catch (_) {}
+      } catch (_) { /* ignore and try next candidate */ }
     }
     box.textContent = "No history found.";
   })();
