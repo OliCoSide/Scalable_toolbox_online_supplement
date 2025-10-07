@@ -409,7 +409,7 @@ toJSON(pregroup_grid_stats, pretty = TRUE, auto_unbox = TRUE) %>% write('preds/p
 
 ### Commercial burden
 
-In Fig.~\ref{fig:comm_burden}, we plot for scenario 3 the pricing function $\pi$ (solid line) in terms of $x_1$ and $x_2$ (panel), along with the corresponding aware premium (dashed line). The gap between the two is the commercial burden, which we highlight with the color scale. As expected for scenario 3, the individuals with $x_2 = 4$ and high values of $x_1$ bear the highest commercial burden despite the plateau for $x_2 > 6$. The discount introduced for $x_1 < 0$ does lower premiums, but implies a loading for $x_1>0$ (when balancing the rates), which further adds commercial burden for individuals on the right of the last panel of @fig-comm_burden, regardless of the insurer's intent.
+In @fig-comm_burden, we plot for scenario 3 the pricing function $\pi$ (solid line) in terms of $x_1$ and $x_2$ (panel), along with the corresponding aware premium (dashed line). The gap between the two is the commercial burden, which we highlight with the color scale. As expected for scenario 3, the individuals with $x_2 = 4$ and high values of $x_1$ bear the highest commercial burden despite the plateau for $x_2 > 6$. The discount introduced for $x_1 < 0$ does lower premiums, but implies a loading for $x_1>0$ (when balancing the rates), which further adds commercial burden for individuals on the right of the last panel of @fig-comm_burden, regardless of the insurer's intent.
 
 ```{r comm-burden-viz}
 #| code-fold: true
@@ -623,7 +623,7 @@ ggsave(filename = "figs/graph_giventariff_commload.png",
 
 ```
 
-![Commercial price (solid line) and aware premium (dashed line) of Ex.~\ref{ex:simul} in scenario 3 in terms of $x_1$ and $x_2$ (panel), with the commercial burden colored.](figs/graph_giventariff_commload.png){#fig-comm_burden width=100%}
+![Commercial price (solid line) and aware premium (dashed line) of the three scenarios (rows) in terms of $x_1$ and $x_2$ (panel), with the commercial burden colored.](figs/graph_giventariff_commload.png){#fig-comm_burden width=100%}
 
 
 ### Implied propensity
