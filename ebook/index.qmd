@@ -68,7 +68,6 @@ This sidebar links to the corresponding section of the main paper.
 :::
 
 
-
 ```{r, eval=FALSE, echo=FALSE}
 # extensions (run in the terminal)
 quarto add leovan/quarto-pseudocode
