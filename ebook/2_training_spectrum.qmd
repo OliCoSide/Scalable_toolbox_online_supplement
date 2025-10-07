@@ -183,7 +183,7 @@ The data used to construct prices and the estimated spectrum should align to ens
 
 ## Discretizing $D$ {#rem-discr}
 
-Subsequent steps involve numerous computations over all possible values of $D$. When $D$ is continuous, discretization can improve tractability. The discretized version should be used throughout this appendix, and the discretization function should be kept for future applications. For multivariate $D$, one approach is to first discretize continuous components, then treat the vector as one categorical variable where each unique combination defines a category. Care should be taken to ensure a manageable number of categories, with sufficient representation in each.  
+Subsequent steps involve numerous computations over all possible values of $D$. When $D$ is continuous, discretization can improve tractability. The discretized version should be used throughout the estimation of the spectrum, and the discretization function should be kept for future applications. For multivariate $D$, one approach is to first discretize continuous components, then treat the vector as one categorical variable where each unique combination defines a category. Care should be taken to ensure a manageable number of categories, with sufficient representation in each.  
 
 :::
 

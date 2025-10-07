@@ -126,3 +126,65 @@ body {
   width:1em; height:1em; vertical-align:-.2em; fill:currentColor;
 }
 
+/* Only the History card gets grey accent & pale links */
+.column-margin .related-box.history { border-left-color: var(--bs-secondary, #adb5bd); }
+.column-margin .related-box.history strong { color: var(--bs-secondary-color, #6c757d); }
+
+.column-margin .related-box.history .muted { opacity:.75; }
+.column-margin .related-box.history .gh-link{
+  color: inherit;               /* not blue */
+  opacity: .6;                  /* pale */
+  text-decoration: none;
+  margin-left: .5rem;
+  border-bottom: 1px dotted currentColor;
+}
+.column-margin .related-box.history .gh-link:hover{
+  opacity: .8;
+  border-bottom-style: solid;
+}
+
+/* (Optional) dark mode background */
+:root[data-bs-theme="dark"] .column-margin .related-box{
+  background: rgba(255,255,255,.05);
+}
+/* Full-width History box at page end */
+.site-history{
+  margin: 2rem 0 1rem;
+  padding: .9rem 1rem;
+  background: var(--bs-light, #f8f9fa);
+  border: 1px solid rgba(0,0,0,.06);
+  border-left: 4px solid var(--bs-secondary, #adb5bd);
+  border-radius: .25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  font-size: .95rem;
+  line-height: 1.45;
+  word-break: break-word;
+}
+.site-history .history-title{
+  display: flex; align-items: center; gap: .5rem;
+  text-transform: uppercase; letter-spacing: .06em;
+  font-size: .78rem; opacity: .85; margin-bottom: .4rem;
+}
+.site-history .gh-mark svg{ display:block; width:14px; height:14px; fill: currentColor; }
+
+.site-history .commit{ margin: .4rem 0; }
+.site-history .commit-head{
+  display:flex; gap:.5rem; align-items: baseline; flex-wrap: wrap;
+}
+.site-history .msg{
+  max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; /* one-line msg */
+}
+.site-history .muted{ opacity:.75; font-size:.9rem; }
+
+.site-history a.sha-link{
+  color: inherit; opacity:.65; text-decoration:none; border-bottom:1px dotted currentColor;
+}
+.site-history a.sha-link:hover{ opacity:.85; border-bottom-style: solid; }
+
+/* Dark mode */
+:root[data-bs-theme="dark"] .site-history{
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.08);
+  box-shadow: none;
+}

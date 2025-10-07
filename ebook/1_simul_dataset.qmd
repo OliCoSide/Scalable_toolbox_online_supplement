@@ -18,6 +18,8 @@ This material complements Section 4.1 of the **main paper**, linked from the sup
 We begin with loading a few packages:
 
 ```{r load-packages}
+#| code-fold: true
+#| code-summary: Packages loading
 #| warning: false
 #| message: false
 library(tidyverse)
@@ -486,7 +488,7 @@ We apply the theoretical pricing functions from all families on a small grid dat
 
 #### Note
 
-All results were obtained on a single thread under R 4.4.2. Numerical integration for the following code chunk take approximately one hour on an Intel(R) Core(TM) Ultra 7 165H CPU with 32 GB of RAM.
+All results were obtained on a single thread under R 4.4.2. Numerical integration for the following code chunk takes approximately one hour on an Intel(R) Core(TM) Ultra 7 165H CPU with 32 GB of RAM.
 
 
 :::
@@ -557,6 +559,12 @@ df_to_g_theo <- setNames(nm = names(parms)) %>% lapply(function(name) {
 }
 ```
 
+::: {.column-margin}
+::: {.related-box}
+**Related section**  
+The local fairness metrics are discussed in @sec-local of this online supplement and defined in **Section 5 of the main paper**
+:::
+:::
 
 ```{r comp-theo-quant}
 #| code-fold: true

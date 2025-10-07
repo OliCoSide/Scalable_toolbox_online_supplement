@@ -61,23 +61,20 @@ This online supplement contains six chapters:
   - @sec-integrated: Presents a unified approach for fairness assessment and monitoring.
 
 ::: {.column-margin}
-::: {.related-box}
+:::: {.related-box}
 **Related section**  
 This sidebar links to the corresponding section of the main paper.
+::::
 :::
-:::
+
+
 
 ```{r, eval=FALSE, echo=FALSE}
 # extensions (run in the terminal)
 quarto add leovan/quarto-pseudocode
 ```
 
-::: {.column-margin}
-::: {.related-box history}
-**History**
-<div id="commit-history">Loading…</div>
-:::
-:::
+
 
 
 
