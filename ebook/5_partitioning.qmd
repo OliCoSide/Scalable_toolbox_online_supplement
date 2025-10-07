@@ -379,7 +379,7 @@ The partitioning methodology is introduced in **Section 6 of the main paper**.
 :::
 
 Five essential components guide supervised partitions:
-  - The **data** should represent the population for which fairness is intended, whether the full portfolio, a representative sample, or a specific subpopulation   - The **partitioning feature space** might include allowed and sensitive variables to reveal ``minorities within minorities''. Alternatively, focusing on permissible variables ensures future usability, even if sensitive attributes become inaccessible. 
+  - The **data** should represent the population for which fairness is intended, whether the full portfolio, a representative sample, or a specific subpopulation   - The **partitioning feature space** might include allowed and sensitive variables to reveal "minorities within minorities". Alternatively, focusing on permissible variables ensures future usability, even if sensitive attributes become inaccessible. 
   - The **response variable** is the key fairness metric, such as fairness range or proxy vulnerability (Sec. 5 of the **main paper**), guiding the supervised partitioning. 
   - The **loss function** defines the partitioning objective: MSE targets average differences across segments, while quantile loss highlights the most at-risk individuals. 
   - The **algorithm** implements the partitioning. While CART is fast, it is only locally optimal. Advanced options like evolutionary trees (`evtree` in R; @grubinger/al:2014) or OSRT @Lin/al:2022_tree aim for global optimality while preserving tractability.
