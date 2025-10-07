@@ -14,7 +14,7 @@ We describe and quantify fairness disparities along three dimensions: *actuarial
 
 The goal of this chapter is twofold:
 
-- Define operational disparity metrics aligned with each fairness dimension.
+- Define operationalizable disparity metrics aligned with each fairness dimension.
 - Evaluate and visualize the fairness alignment of benchmark premiums under multiple scenarios.
 
 Disparities are quantified using Wasserstein distances between protected groups. Premiums are then evaluated by their alignment across all dimensions. This informs the selection of premiums with balanced fairness properties.
@@ -105,9 +105,9 @@ In cases where claims contain many zeros, aggregated loss ratios over small subp
 
 Solidarity demands similar premiums across protected groups. Disparity is measured via the Wasserstein distance between premium distributions: A Wasserstein distance strictly greater than 0 indicates a breach in solidarity.
 
-## Measuring causality disparities#
+## Measuring proxy disparities#
 
-To assess causal disparity, we follow @Lindholm/al:2024 by measuring individual ``proxy effects''. Following @SelectionBias_2024, we measure proxy effects as the difference between a given premium and the aware premium. We then compare their distributions across protected groups. This aligns with the *proxy parity* criterion of @SelectionBias_2024. Implictly, we assume that our estimate of the aware premium is unbiased, otherwise proxy effect assessment may be highly unreliable. 
+To assess proxy disparity, we take inspiration from @Lindholm/al:2024 by measuring individual ``proxy effects''. Following @SelectionBias_2024, we measure proxy effects as the difference between a given premium and the aware premium. We then compare their distributions across protected groups. This aligns with the *proxy parity* criterion of @SelectionBias_2024. Implictly, we assume that our estimate of the aware premium is unbiased, otherwise proxy effect assessment may be highly unreliable. 
 
 ## Disparity measurement per dimension 
 
