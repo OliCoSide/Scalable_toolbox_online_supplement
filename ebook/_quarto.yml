@@ -54,6 +54,7 @@ format:
     html-math-method: mathjax
     include-in-header:
     - file: mathjax-color.html
+    include-after-body: extras/commit-history.js
 
 filters:
   - pseudocode

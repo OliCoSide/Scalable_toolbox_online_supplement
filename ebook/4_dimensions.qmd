@@ -78,7 +78,7 @@ In the case study of the **main paper**, we briefly discuss how we quantified di
 ::: {.column-margin}
 ::: {.related-box}
 **Related section**  
-The dimensions of fairness are described in **Section 3 of the main paper**.
+The dimensions of fairness are described in **Section 3 of the main paper.**
 :::
 :::
 
@@ -87,7 +87,7 @@ The dimensions of fairness are described in **Section 3 of the main paper**.
 ::: {.column-margin}
 ::: {.related-box}
 **Related section**  
-The measurement associated with the dimensions of fairness are described in **Section 4.3 of the main paper**.
+The measurement associated with the dimensions of fairness are described in **Section 4.3 of the main paper.**
 :::
 :::
 

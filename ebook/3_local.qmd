@@ -263,7 +263,7 @@ ggsave(filename = "figs/graph_proxy_dissect_perpop.png",
 ::: {.column-margin}
 ::: {.related-box}
 **Related section**  
-The post-pricing local metrics are described in **Section 5.2 of the main paper**.
+The post-pricing local metrics are described in **Section 5.2 of the main paper.**
 :::
 :::
 

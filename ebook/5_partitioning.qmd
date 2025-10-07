@@ -374,7 +374,7 @@ simplify_path <- function(path_conditions, round_digits = NULL) {
 ::: {.column-margin}
 ::: {.related-box}
 **Related section**  
-The partitioning methodology is introduced in **Section 6 of the main paper**.
+The partitioning methodology is introduced in **Section 6 of the main paper.**
 :::
 :::
 

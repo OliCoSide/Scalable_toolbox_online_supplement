@@ -39,7 +39,7 @@ the_CAS_colors <- c('#FED35D', '#F89708', '#205ED5', '#142345')
 Consider potential explanatory variables $X_1$, $X_2$, $D$ to predict $Y$. 
 Let $X_1$ be normally distributed with mean $1$ and variance $9$. Let $X_2$ be a discrete random variable $P(X_2 = k) = 1/4$, for $k \in \{1, 2, 3, 4\}$. Assume $D$ is a binary sensitive characteristic with $P(D = 1) = 1/2$. 
 
-To analyze proxy effects and potential unfairness, we examine three scenarios, each defined by a different combination of conditional distributions of $(Y|X_1, X_2, D)$ and of $(D|X_1, X_2)$.  
+To analyze proxy effects and potential unfairness, we examine three scenarios, each defined by a different combination of conditional distributions of $(Y|X_1, X_2, D)$ and of $(D|X_1, X_2).$  
 
 For scenarios 1 and 2, the propensity for $D = 1$ is the step function illustrated in the left panel of @fig-prop_t. This propensity, $P(D = 1|X_1 = x_1, X_2 = x_2)$, represents the likelihood that individuals with risk profile $(x_1, x_2)$ belong to group $D = 1$. It governs the dependence between $D$ and permitted covariates, that is, the core of proxy effects. In scenario 3, the shape of $P(D = 1|X_1, X_2)$ is more complex as shown in the right panel of @fig-prop_t.
 

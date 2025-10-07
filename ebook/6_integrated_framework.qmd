@@ -10,7 +10,7 @@ editor-options:
 
 ## Objectives
 
-This section displays how the scalable toolbox may be combined into a comprehensive excel table. 
+This section displays how the scalable toolbox may be combined into a comprehensive monitoring excel table. 
 
 :::
 
@@ -1210,7 +1210,7 @@ for (scenario in names(group_pop_stats)) {
 ::: {.column-margin}
 ::: {.related-box}
 **Related section**  
-The comprehensive monitoring table of the case study is illustrated in **Figure 14 of the main paper**.
+The comprehensive monitoring table of the case study is illustrated in **Figure 14 of the main paper.**
 :::
 :::
 

@@ -66,8 +66,8 @@ body {
 /* Margin card for "related section" */
 .column-margin .related-box{
   background: var(--bs-light, #f8f9fa);
-  border-left: 4px solid var(--bs-primary, #F89708);
-  border-radius: .0rem;
+  border-left: 4px solid #F89708;  /* was var(--bs-primary, #F89708) */
+  border-radius: 0;                /* was .0rem */
   padding: .6rem .75rem;
   font-size: .9rem;
   box-shadow: 0 1px 3px rgba(0,0,0,.06);
@@ -82,6 +82,13 @@ body {
   margin-bottom: .25rem;
 }
 .column-margin .related-box a{
+  text-decoration: none;
+  border-bottom: 1px dotted currentColor;
+}
+
+.column-margin .related-box .commit { margin:.35rem 0; }
+.column-margin .related-box .muted  { opacity:.65; font-size:.85rem; }
+.column-margin .related-box .commit a {
   text-decoration: none;
   border-bottom: 1px dotted currentColor;
 }
