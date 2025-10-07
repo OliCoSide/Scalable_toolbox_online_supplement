@@ -92,3 +92,37 @@ body {
   text-decoration: none;
   border-bottom: 1px dotted currentColor;
 }
+
+.column-margin .related-box.history { border-left-color: #adb5bd; } /* muted grey */
+.column-margin .related-box.history strong { color: #adb5bd; } /* muted grey */
+
+/* keep your existing rules ... */
+
+/* Make 'History' use theme gray + wrap long URLs */
+.column-margin .related-box { word-break: break-word; }
+
+.column-margin .related-box.history{
+  border-left-color: var(--bs-secondary, #adb5bd); /* theme-aware gray */
+}
+.column-margin .related-box.history strong{
+  color: var(--bs-secondary-color, #6c757d);       /* readable gray text */
+}
+
+/* Dark mode tweaks (Quarto sets data-bs-theme) */
+:root[data-bs-theme="dark"] .column-margin .related-box{
+  background: rgba(255,255,255,.05);
+}
+:root[data-bs-theme="dark"] .column-margin .related-box.history strong{
+  color: var(--bs-secondary-color, #cbd3da);
+}
+
+/* GitHub icon in history items */
+.column-margin .related-box .commit .gh-icon{
+  display:inline-flex;
+  margin-right:.35rem;
+  line-height:0;
+}
+.column-margin .related-box .commit .gh-icon svg{
+  width:1em; height:1em; vertical-align:-.2em; fill:currentColor;
+}
+

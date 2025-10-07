@@ -73,9 +73,11 @@ quarto add leovan/quarto-pseudocode
 ```
 
 ::: {.column-margin}
-::: {.related-box}
-<span class="kicker">History</span>
+::: {.related-box history}
+**History**
 <div id="commit-history">Loading…</div>
 :::
 :::
+
+
 
