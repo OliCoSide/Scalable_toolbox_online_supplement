@@ -399,9 +399,74 @@ Illustrative Python code for wasserstein transport toward corrective premiums.
 :::{.callout-note}
 
 ## Optimal transport and Wasserstein distance : technical details
-Let $Z$ be a quantity of interest. Let $\nu_0$ and $\nu_1$ be two laws of $Z$ (finite $p$-th moments, $p\ge1$).
 
-**Probabilistic definition (pairing).**  
+### A statistical Introduction
+
+#### Comparing two samples
+
+Suppose that a quantity of interest $z$ is observed in two groups, with two samples (of equal size to simplify notations), $\{z_0^{(1)},z_0^{(2)},...,z_0^{(n)}\}$ and $\{z_1^{(1)},z_1^{(2)},...,z_1^{(n)}\}$. How can you tell if these two groups are similar or different?
+A common classical approach is to compare their means. For instance, a t-test checks whether two samples have significantly different averages.
+However, this approach assumes something about the shape of the data, typically that both samples come from Gaussian (normal) distributions with similar variances. If the data are skewed, multimodal, or contain outliers, comparing means alone can be misleading.
+
+#### Comparing two samples (nonparametric test)
+
+When you don’t want to assume a specific distribution, you can use nonparametric tests such as the Kolmogorov–Smirnov (KS) test or the Mann–Whitney U test.These tests compare the empirical distributions of the samples directly, essentially, how their cumulative distribution functions (CDFs) differ. This gives a more flexible notion of "difference", but it doesn’t produce a continuous distance that tells how far apart the samples are.
+
+#### Comparing two samples with Wasserstein distance
+
+Optimal transport provides exactly that: a way to measure the distance between distributions.
+Suppose also that the two samples are ordered, $z_0^{(i-1)}\leq z_0^{(i)},...,z_0^{(i+1)}\}$ (and similarly in group $1$), then Wasserstein distance is
+
+$$
+\widehat W_p^p=\frac{1}{n}\sum_{i=1}^{n}\big| z_{(1)}^{(i)}-z_{(0)}^{(i)}\big|^p.
+$$
+
+#### Wasserstein distance and Quantiles
+
+If $\hat F_{0,n}$ and $\hat F_{1,n}$ denote the empirical cumulative distribution functions, $z_{(1)}^{(i)}=\hat F_{1,n}^{-1}(i/n)$ and $z_{(0)}^{(i)}=\hat F_{0,n}^{-1}(i/n)$, so that
+
+$$
+\widehat W_p^p=\frac{1}{n}\sum_{i=1}^{n}\big| \hat F_{1,n}^{-1}(i/n)-\hat F_{0,n}^{-1}(i/n)\big|^p.
+$$
+Thus, Wasserstein distance is a distance between quantile function $F^{-1}$, that can be extended to the case where the two samples do not have the same size.
+
+#### Wasserstein distance and optimal pairing
+
+The pairing $T_{0\to 1}^*:z_{(0)}^{(i)}\mapsto z_{(1)}^{(i)}$ is the optimal pairing, that solves the optimal transport problem
+
+$$
+T_{0\to 1}^*\in\mathrm{argmin}\sum_{i=1}^{n}\big| T(z_{(0)}^{(i)})-z_{(0)}^{(i)}\big|^p
+$$
+
+where $T$ takes values in $\{z_1^{(1)},z_1^{(2)},...,z_1^{(n)}\}$, and $T$ is a one-to-one pairing. From Hardy-Littlewood-Polya inequality, when $p=2$, $T_{0\to 1}^*$ is a comonotonic paring, and should preserve the ranks : the $i$-th ranked observations should be matched together. In a nutshell, it comes from the convexity of the cost function, since
+
+$$
+(z_{(1)}^{(i)}-z_{(0)}^{(i)})^2 + (z_{(1)}^{(j)}-z_{(0)}^{(j)})^2 \leq 
+(z_{(1)}^{(i)}-z_{(0)}^{(j)})^2 + (z_{(1)}^{(j)}-z_{(0)}^{(i)})^2 
+$$
+
+as soon as $i\neq j$. Observe that $T_{0\to 1}^*$ can also be written $T_{0\to 1}^*(\cdot)=\hat F_{1,n}^{-1}(\hat F_{0,n}(\cdot))$
+
+#### Wasserstein barycenter
+
+One can also consider a third sample, defined a $\bar z^{(i)}=(z_{(0)}^{(i)}+z_{(1)}^{(i)})/2$. This is an ordered sample, in between the two. We can write
+
+$$
+\overline{z}^{(i)} 
+= \frac{1}{2} z_{(0)}^{(i)} + \frac{1}{2} z_{(1)}^{(i)} 
+= \frac{1}{2} z_{(0)}^{(i)} + \frac{1}{2} T_{0 \to 1}^* z_{(0)}^{(i)} 
+=  \frac{1}{2} T_{1 \to 0}^* z_{(1)}^{(i)} + \frac{1}{2} z_{(1)}^{(i)} 
+$$
+
+
+Assuming $T_{1 \to 0}^*(\cdot) = \hat{F}_{0,n}^{-1}(\hat{F}_{1,n}(\cdot))$ and $T_{0 \to 1}^*(\cdot) = \hat{F}_{1,n}^{-1}(\hat{F}_{0,n}(\cdot))$, both expressions yield the same barycentric sample.
+
+## Optimal transport and Wasserstein distance 
+
+All those concepts can be formalized more generally. Let $Z$ be a quantity of interest. Let $\nu_0$ and $\nu_1$ be two laws of $Z$ (finite $p$-th moments, $p\ge1$).
+
+**Probabilistic definition (pairing).**
+
 Over all joint laws with the right marginals,
 
 $$
@@ -410,40 +475,25 @@ W_p(\nu_0,\nu_1)
 \mathbb E\big(\,\lVert Z^{(0)}-Z^{(1)}\rVert^p\,\big)\Big)^{1/p}.
 $$
 
-**Interpretation:** the smallest average $p$-power gap under any admissible pairing.  
+**Interpretation:** the smallest average $p$-power gap under any admissible pairing. 
+
 **Units:** same as $Z$; $W_p=0$ iff $\nu_0=\nu_1$.
 
 **Univariate formula (what we compute).**  
+
 Let $F$ and $G$ be the CDFs of $\nu_0$ and $\nu_1$, with quantiles $F^{-1}$ and $G^{-1}$. Then
 
 $$
 W_p(\nu_0,\nu_1)=\left(\int_{0}^{1}\!\big|F^{-1}-G^{-1}\big|^p\,du\right)^{1/p}.
 $$
-For $p=1$,
+
+For $p=1$, 
+
 $$
 W_1(\nu_0,\nu_1)=\int_{0}^{1}\!\big|F^{-1}(u)-G^{-1}(u)\big|\,du
 $$
+
 *Interpretation:* $W_1$ is the average absolute gap between matched quantiles (interpretable in dollars if $Z$ is a monetary amount).
-
-**Empirical, univariate (equal sample sizes).**  
-Given samples $z^{(0)}_{1:n}$ from $\mu$ and $z^{(1)}_{1:n}$ from $\nu$, sort:
-$$
-z^{(0)}_{(1)}\le\cdots\le z^{(0)}_{(n)},\qquad
-z^{(1)}_{(1)}\le\cdots\le z^{(1)}_{(n)}.
-$$
-Then
-$$
-\widehat W_p^p=\frac{1}{n}\sum_{i=1}^{n}\big|z^{(1)}_{(i)}-z^{(0)}_{(i)}\big|^p.
-$$
-
-**Unequal exposures (weighted quantiles).**  
-Pick a grid size $m\in\mathbb N$ and midpoints $u_k=(k-\tfrac12)/m$ for $k=1,\dots,m$ (so $\Delta u=1/m$).  
-If $Q_1$ and $Q_0$ are the (exposure-weighted) quantile functions of the two groups, then
-$$
-\widehat W_p^{\,p}\ \approx\ \frac{1}{m}\sum_{k=1}^{m}\big|Q_1(u_k)-Q_0(u_k)\big|^p.
-$$
-
-*Relevance for actuaries:* it compares entire distributions (center and tails), reports in dollar units, and is heavily theoretically grounded.
 
 :::
 
