@@ -1220,15 +1220,15 @@ You can download the Excel disparity tables for each scenario below.
 
 <div class="d-flex flex-wrap gap-3">
 
-  <a href="../ebook/tables/summaries_Scenario1.xlsx" class="btn btn-outline-primary" role="button" download>
+  <a href="/ebook/tables/summaries_Scenario1.xlsx" class="btn btn-outline-primary" role="button" download>
     ⬇ Scenario 1
   </a>
 
-  <a href="tables/summaries_Scenario2.xlsx" class="btn btn-outline-secondary" role="button" download>
+  <a href="/ebook/tables/summaries_Scenario2.xlsx" class="btn btn-outline-secondary" role="button" download>
     ⬇ Scenario 2
   </a>
 
-  <a href="tables/summaries_Scenario3.xlsx" class="btn btn-outline-warning" role="button" download>
+  <a href="/ebook/tables/summaries_Scenario3.xlsx" class="btn btn-outline-warning" role="button" download>
     ⬇ Scenario 3
   </a>
 
