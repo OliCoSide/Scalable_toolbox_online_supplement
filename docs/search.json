@@ -24,7 +24,7 @@
     "href": "index.html#outline",
     "title": "A scalable toolbox for exposing indirect discrimination in insurance rates",
     "section": "Outline",
-    "text": "Outline\nThis online supplement contains six chapters:\n\n1  Example setup and simulations: Defines the three scenarios and their simulation setup.\n2  Estimating the five fairness premiums: Describes how to estimate the premium spectrum from simulated data.\n4  Measuring the dimensions of fairness: Measures and visualizes the three fairness dimensions.\n3  Actuarial local metrics: Derives pre- and post-pricing fairness metrics, including proxy vulnerability.\n5  Partitioning: Identifies systemic unfairness via partitioning, with repeated experiments.\n6  Integrated framework: Presents a unified approach for fairness assessment and monitoring.\n\n\n\n\nRelated section\nThis sidebar links to the corresponding section of the main paper.",
+    "text": "Outline\nThis online supplement contains six chapters:\n\n1  Example setup and simulations: Defines the three scenarios and their simulation setup.\n2  Estimating the five fairness premiums: Describes how to estimate the premium spectrum from simulated data.\n4  Measuring the dimensions of fairness: Measures and visualizes the three fairness dimensions.\n3  Actuarial local metrics: Derives pre- and post-pricing fairness metrics, including proxy vulnerability.\n5  Partitioning: Identifies systemic unfairness via partitioning, with repeated experiments.\n6  Integrated framework: Presents a unified approach for fairness assessment and monitoring.\n\n\n\n\n\n\nRelated section\nThis sidebar links to the corresponding section of the main paper.",
     "crumbs": [
       "Introduction"
     ]
