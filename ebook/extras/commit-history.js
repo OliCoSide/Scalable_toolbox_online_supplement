@@ -11,19 +11,25 @@
   const box = document.getElementById("commit-history");
   if (!box) return;
 
-  // Map /docs/foo.html -> foo ; strip repo slug if present on GH Pages
-  let p = window.location.pathname.replace(/^\/+/, "");
-  p = p.replace(new RegExp("^" + REPO + "/", "i"), "");
-  if (p === "" || p.endsWith("/")) p += "index.html";
-  p = p.replace(/^docs\//, "");
-  const stem = p.replace(/\.html?$/i, "");
+  // --- Compute page stem (e.g., "6_integrated_framework") ---
+  // Path on GH Pages: /<repo>/<page>.html
+  const repoSlugRE = new RegExp("^/" + REPO + "/?", "i");
+  let path = window.location.pathname.replace(repoSlugRE, "").replace(/^\/+/, "");
+  if (path === "" || path.endsWith("/")) path += "index.html";
+  // Your Quarto outputs HTML directly in docs/, so strip a leading docs/ if present:
+  path = path.replace(/^docs\//, "");
+  const stem = path.replace(/\.html?$/i, ""); // "6_integrated_framework" | "index"
+
 
   // Try common source roots/extensions
   const SRC_DIRS = ["", "ebook/"];
   const EXTS = [".qmd", ".Rmd", ".rmd", ".rmarkdown", ".md"];
   const candidates = [];
   for (const dir of SRC_DIRS) for (const ext of EXTS) candidates.push(dir + stem + ext);
+  // If index page, also try ebook/index.qmd explicitly
+  if (stem === "index") candidates.unshift("ebook/index.qmd");
 
+  
   (async function run() {
     for (const path of candidates) {
       const url = `https://api.github.com/repos/${USER}/${REPO}/commits?path=${encodeURIComponent(path)}&sha=${BRANCH}&per_page=${MAX}`;
