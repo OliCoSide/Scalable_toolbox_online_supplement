@@ -4,6 +4,7 @@ project:
 
 resources:
   - tables/*.xlsx
+  - extras/commit-history.js
 
 book:
   title: "A scalable toolbox for exposing indirect discrimination in insurance rates"
