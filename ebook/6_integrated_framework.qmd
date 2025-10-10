@@ -1200,7 +1200,7 @@ for (scenario in names(group_pop_stats)) {
   sensitive_variable = "D",
   dictionnary_proxy = dictionnary_proxy,
   dictionnary_comm = dictionnary_comm),
-  file_name = paste0('tables/summaries_', scenario, '.xlsx'))
+  file_name = paste0('../docs/tables/summaries_', scenario, '.xlsx'))
 }
 
 ```
