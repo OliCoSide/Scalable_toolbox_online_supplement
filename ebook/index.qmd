@@ -2,6 +2,8 @@
 
 This online supplement provides code and reproducible examples for the article titled *'A scalable toolbox for exposing indirect discrimination in insurance rates.'*
 
+ ![Summary of the methodology of the paper](figs/flowchart_estimating_spectrum.png){#fig-bigchart width=100%}
+
 :::{.callout-note}
 Codes are written both in R and Python.
 :::
