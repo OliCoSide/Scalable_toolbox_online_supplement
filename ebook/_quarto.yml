@@ -9,15 +9,15 @@ resources:
 book:
   title: "A scalable toolbox for exposing indirect discrimination in insurance rates"
   author:
-  - name: Olivier Côté
+  - name: Olivier Côté, M.Sc., ACAS
     orcid: 0009-0000-5632-3472
     affiliations:
       - name: École d'actuariat de l'Université Laval
-  - name: Marie-Pier Côté
+  - name: Marie-Pier Côté, FSA, Ph.D.
     orcid: 0000-0003-0383-1689
     affiliations:
       - name: École d'actuariat de l'Université Laval
-  - name: Arthur Charpentier
+  - name: Arthur Charpentier, Ph.D.
     orcid: 0000-0003-3654-6286
     affiliations:
       - name: Université du Québec à Montréal

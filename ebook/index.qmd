@@ -37,16 +37,18 @@ In this paper, we focus on fairness in actuarial pricing. We study the situation
     * The **best-estimate** premium is the most accurate predictor of losses using all available information, including the sensitive variable,
     * The **unaware** premium is the most accurate predictor of losses using all information except the sensitive variable,
     * The **aware** premium is the most accurate predictor of losses when controlling for the sensitive variable,
-    * The **corrective** premium is the most accurate predictor that enforces similar premium distributions across levels of the sensitive variable. 
+    * The **corrective** premium is the most accurate predictor that enforces similar premium distributions across levels of the sensitive variable, 
     * The **hyperaware** premium is the most accurate approximation of the corrective premium that does not directly discriminate on the sensitive variable,
   - We define actuarially relevant local metrics that quantify the monetary impact of unfairness at the policyholder level.
     * Proxy vulnerability is the difference between unaware and aware premiums. It locally measures how much the allowed variables pick up the signal of a missing sensitive variable.
   - We define post pricing local metrics to evaluate the fairness of any pricing structure relative to the estimated spectrum.
   - We partition policyholders to expose the segments in which unfair discrimination is most severe.
-  - We integrate these components into a fairness assessment framework that identifies which segments to investigate (via partitioning) and what to measure.
-  - We illustrate our approach with a large case study inspired by industry practice. The analysis relies a real dataset of 768,000 vehicles insured in Québec (2016--2017), covering at-fault material damage claims. We examine the fairness of a pseudo commercial price with respect to discretized credit score: low (vulnerable group) vs high.
+  - We integrate these components into a fairness assessment framework that partitions the policyholders, pinpoints segments most affected by unfairness, and evaluates local metrics to diagnose unfairness and guide intervention..
+  - We illustrate our approach with a large case study inspired by industry practice. The analysis relies a real dataset of 768,000 vehicles insured in Québec (2016--2017), covering at-fault material damage claims. We examine the fairness of a pseudo commercial price with respect to discretized credit score: low (vulnerable group) vs high. This sensitive variable measures the policyholder's economic precariousness.
     * Proxy vulnerability is both material and skewed: while most policyholders may receive a modest rebate, a vulnerable minority of them could face 15--30\% overpricing if the regulation only requires that the sensitive variable be omitted,
     * Our integrated framework (@sec-integrated) illustrates that fairness in insurance pricing can be assessed efficiently, with minimal analyst effort. The framework provides simultaneous diagnostics from the three fairness dimensions, translates unfairness into dollar terms at the individual level, and highlights disparities across population segments.
+  - We provide additional information and the complete code illustrated on a comprehensive simulated data example in this online supplement.
+
 Designed for routine portfolio monitoring, our toolbox delivers valuable insights whether or not the sensitive attribute is included in pricing, provided it is available for assessment.  The toolbox's scalability, across large datasets and rich covariate sets, makes fairness operationalizable for actuaries: intuitive, practical, and encompassing the three fairness dimensions.
 
 **Keywords**: Dimensions of fairness; Practical benchmarking; Systematic disparity detection; Comprehensive framework; Operationalizable fairness;
