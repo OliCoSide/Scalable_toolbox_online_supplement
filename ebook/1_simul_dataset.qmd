@@ -1,7 +1,7 @@
 ---
 output: html_document
-editor-options: 
-  chunk-output-type: console
+editor_options: 
+  chunk_output_type: console
 ---
 # Example setup and simulations {#sec-simul-dataset}
 
@@ -19,7 +19,7 @@ We begin with loading a few packages:
 
 ```{r load-packages}
 #| code-fold: true
-#| code-summary: Packages loading
+#| code-summary: Loading packages
 #| warning: false
 #| message: false
 library(tidyverse)
@@ -29,7 +29,7 @@ library(jsonlite)
 
 ```{r def-colors}
 #| code-fold: true
-#| code-summary: Colors definition
+#| code-summary: Defining colors
 #| warning: false
 #| message: false
 the_CAS_colors <- c('#FED35D', '#F89708', '#205ED5', '#142345')
@@ -39,17 +39,17 @@ the_CAS_colors <- c('#FED35D', '#F89708', '#205ED5', '#142345')
 ## Setup of the three scenarios 
 
 Consider potential explanatory variables $X_1$, $X_2$, $D$ to predict $Y$. 
-Let $X_1$ be normally distributed with mean $1$ and variance $9$. Let $X_2$ be a discrete random variable $P(X_2 = k) = 1/4$, for $k \in \{1, 2, 3, 4\}$. Assume $D$ is a binary sensitive characteristic with $P(D = 1) = 1/2$. 
+Let $X_1$ be normally distributed with mean $1$ and variance $9$. Let $X_2$ be a discrete random variable with $P(X_2 = k) = 1/4$, for $k \in \{1, 2, 3, 4\}$. Assume $D$ is a binary sensitive characteristic with $P(D = 1) = 1/2$. 
 
 To analyze proxy effects and potential unfairness, we examine three scenarios, each defined by a different combination of conditional distributions of $(Y|X_1, X_2, D)$ and of $(D|X_1, X_2).$  
 
 For scenarios 1 and 2, the propensity for $D = 1$ is the step function illustrated in the left panel of @fig-prop_t. This propensity, $P(D = 1|X_1 = x_1, X_2 = x_2)$, represents the likelihood that individuals with risk profile $(x_1, x_2)$ belong to group $D = 1$. It governs the dependence between $D$ and permitted covariates, that is, the core of proxy effects. In scenario 3, the shape of $P(D = 1|X_1, X_2)$ is more complex as shown in the right panel of @fig-prop_t.
 
-For scenarios 1 and 2, specific equations of the propensity for $D = 1$ is given by
+For scenarios 1 and 2, the propensity for $D = 1$ is given by
 \begin{equation*}
         P(D = 1|X_1, X_2) =  0.05  + 0.1 X_2 + 0.4 \times \mathbf{1}\{X_1 > E(X_1)\},
 \end{equation*}
-Where $\mathbf{1}\{A\} = 1$ if $A$ is true, and $0$ otherwise. This is a step function with respect to $X_2$, because $X_2$ is discrete. For scenario 3, the propensity is 
+where $\mathbf{1}\{A\} = 1$ if $A$ is true, and $0$ otherwise. This is a step function with respect to $X_2$, because $X_2$ is discrete. For scenario 3, the propensity is 
 \begin{equation*}
          P(D = 1|X_1, X_2) = F^{-1}_B(\text{expit}[0.05 \{X_1 - E(X_1)\}^2 - \delta]),
 \end{equation*}
@@ -146,11 +146,11 @@ prob_D <- function(X1, X2, D = 1, params){
 ```
 
 
-For illustration, we assume that the claim propensity is normally distributed with $\sigma^2 = 45$ and 
+For illustration, we assume that the claim amount is normally distributed with $\sigma^2 = 45$ and 
 \begin{equation} \label{eq:ex_distY}
-E(Y|X_1, X_2, D) = 100 + 3 X_1 \{(1 - \gamma_D) + \gamma_D D\} + 15 D, 
+E(Y|X_1, X_2, D) = 100 + 4 X_1 \{(1 - \gamma_D) + \gamma_D D\} + 15 D, 
 \end{equation}
-with $\gamma_D = 0$ (no interaction) for scenario 1 and $\gamma_D = 0.5$ (interaction) for scenarios 2 and 3. Note that $X_2$ is not a true risk factor for $Y$ in all three scenarios.
+with $\gamma_D = 0$ (no interaction) for scenario 1 and $\gamma_D = 0.5$ (interaction) for scenarios 2 and 3. Note that $X_2$ is not a true risk factor for $Y$ in any of the three scenarios.
 
 ```{r def-esp}
 #| code-fold: true
@@ -162,7 +162,7 @@ Esp_Y <- function(X1, X2, D, params){
 }
 ```
 
-We then define set of parameters consistent with the three scenarios.
+We then define a set of parameters consistent with the three scenarios.
 
 ```{r def-params}
 #| code-fold: true
@@ -189,7 +189,7 @@ rm(parms_original)
 
 ## Theoretical computation of the spectrum of fairness
 
-We create function to calculate theoretically all pricing benchmarks, which involves multiple complex function for the theoretical expression of the corrective premium
+We create functions to calculate all pricing benchmarks theoretically, which involves multiple complex functions for the theoretical expression of the corrective premium.
 
 ```{r def_grid}
 #| code-fold: true
@@ -339,7 +339,7 @@ maps_to_corr_theo <- function(mu_B, D, params = params){
 
 ```{r def-prem-quant-generic}
 #| code-fold: true
-#| code-summary: Generic premium spectrum  and metrics builder
+#| code-summary: Generic premium spectrum and metrics builder
 levels_for_premiums <- c("mu_B", "mu_U", "mu_A", "mu_H", "mu_C")
 labels_for_premiums <- c("$\\mu^B$","$\\mu^U$", "$\\mu^A$", "$\\mu^H$", "$\\mu^C$")
 
@@ -444,7 +444,7 @@ quant_generator <- function(premiums){
 
 ```{r def-prem-quant-theo}
 #| code-fold: true
-#| code-summary: Theoric premium function definition
+#| code-summary: Theoretical premium function definition
 premiums_theo <- setNames(nm = names(parms)) %>% lapply(function(name){
   best_fun_theo <- function(newdata){
     Esp_Y(X1 = newdata$X1, 
@@ -482,7 +482,7 @@ quants_theo <- setNames(nm = names(parms)) %>% lapply(function(name){
 })
 ```
 
-We apply the theoretical pricing functions from all families on a small grid dataset to visualize the results
+We apply the theoretical pricing functions from all families on a small grid dataset to visualize the results.
 
 :::{.callout-warning}
 
@@ -500,7 +500,7 @@ All results were obtained on a single thread under R 4.4.2. Numerical integratio
 #| message: false
 df_to_g_theo_file <- "preds/df_to_g_theo.json"
 
-## If the folder do not exist... 
+## If the folder does not exist... 
 if (!dir.exists('preds')) {
   dir.create('preds')
 }
@@ -562,7 +562,7 @@ df_to_g_theo <- setNames(nm = names(parms)) %>% lapply(function(name) {
 ::: {.column-margin}
 ::: {.related-box}
 **Related section**  
-The local fairness metrics are discussed in @sec-local of this online supplement and defined in **Section 5 of the main paper**
+The local fairness metrics are discussed in @sec-local of this online supplement and defined in **Section 5 of the main paper**.
 :::
 :::
 
@@ -618,7 +618,7 @@ to_save_pdx_t_perpop <- names(df_to_g_theo)[-1] %>%
       the_y_label <- NULL
     }
     
-    the_pops <- c(NA, 'Scenario 1 and 2', 'Scenario 3')
+    the_pops <- c(NA, 'Scenarios 1 and 2', 'Scenario 3')
     
     ## lets graph
     df_to_g_theo[[name]] %>% 
@@ -819,7 +819,7 @@ ggsave(filename = "figs/graph_premiumsdense_AHC_t_perpop.png",
 
 ## Simulating from the scenarios
 
-We start with the generic simulating function, which takes desired number of simulation `n` and a set of parameters `params` as argument. 
+We start with the generic simulating function, which takes the desired number of simulations `n` and a set of parameters `params` as arguments. 
 
 ```{r def-sim-fun-generic}
 #| code-fold: true
@@ -863,7 +863,7 @@ files_sims <- paste0('simuls/',
                      c('train', 'valid', 'test'),
                      '_scenarios.json')
 
-## If the folder do not exist... 
+## If the folder does not exist... 
 if (!dir.exists('simuls')) {
   dir.create('simuls')
 }
@@ -1016,8 +1016,8 @@ pop_to_g_theo <- setNames(nm = names(sims)) %>% lapply(function(name) {
     
     data <- list_data[[nm]]
     
-  # Step 3: Compute theoretical premiums (EXCEPT muC AND muC, we interpolate here)
-  message(sprintf("[%s] Step 3: Computing theoretical premiums (no muC and muC)", Sys.time()))
+  # Step 3: Compute theoretical premiums (EXCEPT muH AND muC, we interpolate here)
+  message(sprintf("[%s] Step 3: Computing theoretical premiums (no muH and muC)", Sys.time()))
   theo_premiums_except_muH_muC <- setNames(object = setdiff(levels_for_premiums, c("mu_H", "mu_C")), nm = paste0(setdiff(levels_for_premiums, c("mu_H", "mu_C")), '_t')) %>%
     sapply(function(s) {
       message(sprintf("[%s] Computing theoretical premium: %s", Sys.time(), s))

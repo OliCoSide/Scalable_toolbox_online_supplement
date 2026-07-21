@@ -1,7 +1,7 @@
 ---
 output: html_document
-editor-options: 
-  chunk-output-type: console
+editor_options: 
+  chunk_output_type: console
 ---
 
 # Measuring the dimensions of fairness {#sec-dim}
@@ -73,7 +73,7 @@ wasserstein_by_group <- function(values, group) {
 }
 ```
 
-In the case study of the **main paper**, we briefly discuss how we quantified disparities using the wasserstein distance. We briefly discuss technical limitations in the measurement of the different disparities regarding the three dimensions of fairness: *actuarial fairness*, *solidarity*, and *causality*. 
+In the case study of the **main paper**, we briefly discuss how we quantified disparities using the Wasserstein distance. We briefly discuss technical limitations in the measurement of the different disparities regarding the three dimensions of fairness: *actuarial fairness*, *solidarity*, and *causality*. 
 
 ::: {.column-margin}
 ::: {.related-box}
@@ -87,11 +87,11 @@ The dimensions of fairness are described in **Section 3 of the main paper.**
 ::: {.column-margin}
 ::: {.related-box}
 **Related section**  
-The measurement associated with the dimensions of fairness are described in **Section 4.3 of the main paper.**
+The measurements associated with the dimensions of fairness are described in **Section 4.3 of the main paper.**
 :::
 :::
 
-Actuarial fairness concerns differences in expected loss ratios. Disparity implies cross-subsidies; a violation of actuarial fairness. We compute individual loss ratios as
+Actuarial fairness concerns differences in expected loss ratios. Disparity implies cross-subsidies, a violation of actuarial fairness. We compute individual loss ratios as
 
 $$
 LR_i = Y_i / \text{premium}_i.
@@ -105,9 +105,9 @@ In cases where claims contain many zeros, aggregated loss ratios over small subp
 
 Solidarity demands similar premiums across protected groups. Disparity is measured via the Wasserstein distance between premium distributions: A Wasserstein distance strictly greater than 0 indicates a breach in solidarity.
 
-## Measuring proxy disparities#
+## Measuring proxy disparities
 
-To assess proxy disparity, we take inspiration from @Lindholm/al:2024 by measuring individual ``proxy effects''. Following @SelectionBias_2024, we measure proxy effects as the difference between a given premium and the aware premium. We then compare their distributions across protected groups. This aligns with the *proxy parity* criterion of @SelectionBias_2024. Implictly, we assume that our estimate of the aware premium is unbiased, otherwise proxy effect assessment may be highly unreliable. 
+To assess proxy disparity, we take inspiration from @Lindholm/al:2024 by measuring individual "proxy effects". Following @SelectionBias_2024, we measure proxy effects as the difference between a given premium and the aware premium. We then compare their distributions across protected groups. This aligns with the *proxy parity* criterion of @SelectionBias_2024. Implicitly, we assume that our estimate of the aware premium is unbiased, otherwise proxy effect assessment may be highly unreliable. 
 
 ## Disparity measurement per dimension 
 
@@ -155,7 +155,7 @@ the_wass_table <- setNames(nm = names(pregroup_pop_stats)) |> lapply(function(th
 
 ```{r}
 #| code-fold: true
-#| code-summary: Code that generate the measurment table for scenario 1
+#| code-summary: Code that generates the measurement table for scenario 1
 #| warning: false
 #| message: false
 library(knitr)
@@ -185,7 +185,7 @@ datatable(
   rownames = FALSE,
   caption = htmltools::tags$caption(
     style = 'caption-side: top; text-align: left; font-weight: bold;',
-    'Scenario 1: Disparity measures as wasserstein distance between D subpopulation distributions. The quantity behind the distribution depends on the dimension measured. '
+    'Scenario 1: Disparity measures as Wasserstein distance between D subpopulation distributions. The quantity behind the distribution depends on the dimension measured. '
   )
 )
 
@@ -195,7 +195,7 @@ datatable(
 
 ```{r}
 #| code-fold: true
-#| code-summary: Code that generate the measurment table for scenario 2
+#| code-summary: Code that generates the measurement table for scenario 2
 #| warning: false
 #| message: false
 
@@ -223,7 +223,7 @@ datatable(
   rownames = FALSE,
   caption = htmltools::tags$caption(
     style = 'caption-side: top; text-align: left; font-weight: bold;',
-    'Scenario 2: Disparity measures as wasserstein distance between D subpopulation distributions. The quantity behind the distribution depends on the dimension measured. '
+    'Scenario 2: Disparity measures as Wasserstein distance between D subpopulation distributions. The quantity behind the distribution depends on the dimension measured. '
   )
 )
 
@@ -233,7 +233,7 @@ datatable(
 
 ```{r}
 #| code-fold: true
-#| code-summary: Code that generate the measurment table for scenario 3
+#| code-summary: Code that generates the measurement table for scenario 3
 #| warning: false
 #| message: false
 
@@ -260,7 +260,7 @@ datatable(
   rownames = FALSE,
   caption = htmltools::tags$caption(
     style = 'caption-side: top; text-align: left; font-weight: bold;',
-    'Scenario 3: Disparity measures as wasserstein distance between D subpopulation distributions. The quantity behind the distribution depends on the dimension measured. '
+    'Scenario 3: Disparity measures as Wasserstein distance between D subpopulation distributions. The quantity behind the distribution depends on the dimension measured. '
   )
 )
 
@@ -268,7 +268,7 @@ datatable(
 
 :::
 
-## Vizualization of alignment with dimensions
+## Visualization of alignment with dimensions
 
 Next, we visualize premium alignment across fairness dimensions. We first standardize the measurements for comparability, then reverse their direction so that higher values indicate better alignment.
 
@@ -293,7 +293,7 @@ the_alignement_table <- setNames(nm = names(the_wass_table)) |> lapply(function(
 }) 
 ```
 
-```{r alignment graph}
+```{r alignment-graph}
 #| code-fold: true
 #| code-summary: Code for the illustration of alignment
 #| warning: false
@@ -314,7 +314,7 @@ the_vec <- c(RColorBrewer::brewer.pal(5, 'Spectral'), "black") %>% darken(0.2)
 lty_vec <- c("solid", "solid", "solid", "12", "12",  "32")
 
 for (the_scen in names(the_alignement_table)) {
-  the_local_table <- the_alignement_table$Scenario1
+  the_local_table <- the_alignement_table[[the_scen]]
 
   data_2 <- the_local_table %>% select(`Actuarial fairness`, Causality, Solidarity)
   data_radar <- rbind(
@@ -367,7 +367,7 @@ dev.off()
 
 ```{r scen-1-align-table}
 #| code-fold: true
-#| code-summary: Code that generate the alignment table for scenario 1
+#| code-summary: Code that generates the alignment table for scenario 1
 #| warning: false
 #| message: false
 
@@ -397,7 +397,7 @@ datatable(
 
 ```{r scen-2-align-table}
 #| code-fold: true
-#| code-summary: Code that generate the alignment table for scenario 2
+#| code-summary: Code that generates the alignment table for scenario 2
 #| warning: false
 #| message: false
 
@@ -427,7 +427,7 @@ datatable(
 
 ```{r scen-3-align-table}
 #| code-fold: true
-#| code-summary: Code that generate the alignment table for scenario 3
+#| code-summary: Code that generates the alignment table for scenario 3
 #| warning: false
 #| message: false
 

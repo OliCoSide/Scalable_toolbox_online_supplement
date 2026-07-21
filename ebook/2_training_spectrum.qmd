@@ -1,7 +1,7 @@
 ---
 output: html_document
-editor-options: 
-  chunk-output-type: console
+editor_options: 
+  chunk_output_type: console
 ---
 
 # Estimating the five fairness premiums {#sec-training}
@@ -167,16 +167,16 @@ the_CAS_colors <- c('#FED35D', '#F89708', '#205ED5', '#142345')
 ```
 
 
-In this section, we provide an example of detailed methodology for estimating the benchmarks premiums from the spectrum of fairness defined in Section 4.1 of the **main paper**. It complements the estimation of Section 4.1. 
+In this section, we provide an example of detailed methodology for estimating the benchmark premiums from the spectrum of fairness defined in Section 4.1 of the **main paper**. It complements the estimation of Section 4.3. 
 
-In this paper, premiums are estimated using `lightgbm` algorithms from @Ke/al:2017, a package that supports common actuarial distributions (Tweedie, Poisson, Gamma, etc.) and was found to have excellent predictive performance compared to other boosting algorithm in @Chevalier/al:2024. Given `lightgbm`'s flexibility, we advocate for careful variable preselection to:
+In this paper, premiums are estimated using `lightgbm` algorithms from @Ke/al:2017, a package that supports common actuarial distributions (Tweedie, Poisson, Gamma, etc.) and was found to have excellent predictive performance compared to other boosting algorithms in @Chevalier/al:2024. Given `lightgbm`'s flexibility, we advocate for careful variable preselection to:
 
   - Ensure comprehensive coverage of risk factors,
   - Reduce redundancy and potential multicollinearity while preserving predictive value.
 
-We optimize hyperparameters with a validation set to prevent overfitting. Key hyperparameters in `lightgbm` are the number of trees (`num_iterations`), regularization (`lambda_l1`, `lambda_l2`) for complexity control, and subsampling percentages (`feature_fraction`, `bagging_fraction`) .
+We optimize hyperparameters with a validation set to prevent overfitting. Key hyperparameters in `lightgbm` are the number of trees (`num_iterations`), regularization (`lambda_l1`, `lambda_l2`) for complexity control, and subsampling percentages (`feature_fraction`, `bagging_fraction`).
 
-The data used to construct prices and the estimated spectrum should align to ensure comparability. In the Case Study of the **main paper**, we conduct a posteriori benchmarking, as the study period is historical. A posteriori assessment can reveal segments where the model misaligned from fairness dimensions after the fact. In contrast, conducting benchmarking concurrently with the development of a new pricing model provides an estimate of how well the commercial price aligns with fairness dimensions for future periods, though the true fairness implications of the commercial price will only become evident retrospectively.
+The data used to construct prices and the estimated spectrum should align to ensure comparability. In the Case Study of the **main paper**, we conduct a posteriori benchmarking, as the study period is historical. A posteriori assessment can reveal segments where the model was misaligned with fairness dimensions after the fact. In contrast, conducting benchmarking concurrently with the development of a new pricing model provides an estimate of how well the commercial price aligns with fairness dimensions for future periods, though the true fairness implications of the commercial price will only become evident retrospectively.
 
 
 :::{.callout-note}
@@ -271,7 +271,7 @@ The **unaware price**, $\mu^U(\mathbf{x})$, excludes direct use of $D$. It is de
 \begin{equation*}  
     \widehat{\mu}^U(\mathbf{x}) = E\{\widehat{\mu}^B(\mathbf{x}, D) | X = \mathbf{x}\}.  
 \end{equation*}  
-This maintains consistency with the best estimate premium, whether $\widehat{\mu}^B$ is data-driven or based on indicated rates (Complement 5 of the **main paper**). One can use a \texttt{lightgbm} to predict $\widehat{\mu}^B(\mathbf{X}, D)$ based on $\mathbf{X}$. The loss function defaults to mean squared error as it is a reasonable distributional assumption for this response variable.
+This maintains consistency with the best estimate premium, whether $\widehat{\mu}^B$ is data-driven or based on indicated rates (Complement 5 of the **main paper**). One can use a `lightgbm` model to predict $\widehat{\mu}^B(\mathbf{X}, D)$ based on $\mathbf{X}$. The loss function defaults to mean squared error as it is a reasonable distributional assumption for this response variable.
 
 Alternatively (what we do), one can estimate the propensity and explicitly weight the best-estimate premiums based on predicted propensity. This also keeps consistency with the best-estimate.
 
@@ -329,15 +329,15 @@ pdx_sims <- lapply(seq_along(sim_samples), function(idx){
 
 ## Aware premium {#sec-est_aw}
 
-The **aware premium**, $\widehat{\mu}^A(\mathbf{x})$, requires knowledge of the marginal distribution of $D$. The aware price, a particular case of the ``discrimination-free'' price of @Lindholm/al:2022, is computed as:  
+The **aware premium**, $\widehat{\mu}^A(\mathbf{x})$, requires knowledge of the marginal distribution of $D$. The aware price, a particular case of the "discrimination-free" price of @Lindholm/al:2022, is computed as:  
 \begin{equation*}
     \widehat{\mu}^A(\mathbf{x}) = \sum_{d\in \mathcal{D}} \widehat{\mu}^B(\mathbf{x}, d) \widehat{\Pr}(D = d).
 \end{equation*}
-As discussed earlier, we assume $D$ is discrete or discretized. If the training sample is representative of the target population (portfolio, market, or region?), empirical proportions are consistent estimators of $\widehat{\Pr}(D = d)$. This is also an estimator suggested in Section 5 of @Lindholm/al:2022.
+As discussed earlier, we assume $D$ is discrete or discretized. If the training sample is representative of the target population (portfolio, market, or region), empirical proportions are consistent estimators of $\Pr(D = d)$. This is also an estimator suggested in Section 5 of @Lindholm/al:2022.
 
 ```{r emp_prop}
 #| code-fold: true
-#| code-summary: Computing the empirical proportions for protected supopulations
+#| code-summary: Computing the empirical proportions for protected subpopulations
 #| warning: false
 marg_dist <- sims %>% lapply(function(data){
   data$D %>% table %>%  prop.table
@@ -346,7 +346,7 @@ marg_dist <- sims %>% lapply(function(data){
 ## for later use
 saveRDS(marg_dist, 'preds/the_empirical_proportions.rds')
 
-## Computing the empirical proportions for protected supopulations on experimental data (for later use in section 5)
+## Computing the empirical proportions for protected subpopulations on experimental data (for later use in section 5)
 marg_dist_sims <- seq_along(sim_samples) %>% lapply(function(idx){
   sim_samples[[idx]]$train$D %>% table %>%  prop.table
 })
@@ -356,7 +356,7 @@ marg_dist_sims <- seq_along(sim_samples) %>% lapply(function(idx){
 
 :::{.callout-note}
 
-   This method generalizes the use of $D$ as a control variable to prevent distortions in estimated effect of $\mathbf{X}$ due to omitted variable bias. It applies to all model types and has a causal interpretation under the assumptions that: (i) possible values of $\mathbf{X}$ are observed across all groups of $D$ (no extrapolation), (ii) $D$ causes both $\mathbf{X}$ and $Y$, and (iii) there are no relevant unobserved variables. Under the same assumptions, other methods are estimators of the aware premium. One example is inverse probability weighting, which re-weights observations to (artificially) remove the association between $\mathbf{X}$ and $D$, preventing proxy effects. 
+   This method generalizes the use of $D$ as a control variable to prevent distortions in the estimated effect of $\mathbf{X}$ due to omitted variable bias. It applies to all model types and has a causal interpretation under the assumptions that: (i) possible values of $\mathbf{X}$ are observed across all groups of $D$ (no extrapolation), (ii) $D$ causes both $\mathbf{X}$ and $Y$, and (iii) there are no relevant unobserved variables. Under the same assumptions, other methods are estimators of the aware premium. One example is inverse probability weighting, which re-weights observations to (artificially) remove the association between $\mathbf{X}$ and $D$, preventing proxy effects. 
 
 :::
 
@@ -380,25 +380,25 @@ sens_train = pd.read_csv('sensitive_train.csv')  # discrete sensitive data
 
 # Train Fair Wasserstein transport to adjust premiums
 barycenter = FairWasserstein()
-barycenter.fit(best_est.values, sens.values)
+barycenter.fit(best_est_train.values, sens_train.values)
 
 # Load best-estimate premiums and associated sensitive attributes
-best_est_test = pd.read_csv('best_est_prem_test.csv')  # Training premiums
+best_est_test = pd.read_csv('best_est_prem_test.csv')  # Test premiums
 sens_test = pd.read_csv('sensitive_test.csv')  # discrete sensitive data
 
 # Apply transformation to obtain fairness-adjusted premiums
 corrective_premiums_test = barycenter.transform(best_est_test.values, sens_test.values)
 
 # Save results
-pd.DataFrame(corrective_premiums).to_csv('corr_prem_test.csv', index=False)
+pd.DataFrame(corrective_premiums_test).to_csv('corr_prem_test.csv', index=False)
 
 ```
-Illustrative Python code for wasserstein transport toward corrective premiums.
+Illustrative Python code for Wasserstein transport toward corrective premiums.
 :::
 
 :::{.callout-note}
 
-## Optimal transport and Wasserstein distance : technical details
+## Optimal transport and Wasserstein distance: technical details
 
 ### A statistical Introduction
 
@@ -410,12 +410,12 @@ However, this approach assumes something about the shape of the data, typically 
 
 #### Comparing two samples (nonparametric test)
 
-When you don’t want to assume a specific distribution, you can use nonparametric tests such as the Kolmogorov–Smirnov (KS) test or the Mann–Whitney U test.These tests compare the empirical distributions of the samples directly, essentially, how their cumulative distribution functions (CDFs) differ. This gives a more flexible notion of "difference", but it doesn’t produce a continuous distance that tells how far apart the samples are.
+When you don’t want to assume a specific distribution, you can use nonparametric tests such as the Kolmogorov–Smirnov (KS) test or the Mann–Whitney U test. These tests compare the empirical distributions of the samples directly, essentially, how their cumulative distribution functions (CDFs) differ. This gives a more flexible notion of "difference", but it doesn’t produce a continuous distance that tells how far apart the samples are.
 
 #### Comparing two samples with Wasserstein distance
 
 Optimal transport provides exactly that: a way to measure the distance between distributions.
-Suppose also that the two samples are ordered, $z_0^{(i-1)}\leq z_0^{(i)},...,z_0^{(i+1)}\}$ (and similarly in group $1$), then Wasserstein distance is
+Suppose also that the two samples are ordered, $z_0^{(i-1)}\leq z_0^{(i)},...,z_0^{(i+1)}$ (and similarly in group $1$), then the Wasserstein distance is
 
 $$
 \widehat W_p^p=\frac{1}{n}\sum_{i=1}^{n}\big| z_{(1)}^{(i)}-z_{(0)}^{(i)}\big|^p.
@@ -428,7 +428,7 @@ If $\hat F_{0,n}$ and $\hat F_{1,n}$ denote the empirical cumulative distributio
 $$
 \widehat W_p^p=\frac{1}{n}\sum_{i=1}^{n}\big| \hat F_{1,n}^{-1}(i/n)-\hat F_{0,n}^{-1}(i/n)\big|^p.
 $$
-Thus, Wasserstein distance is a distance between quantile function $F^{-1}$, that can be extended to the case where the two samples do not have the same size.
+Thus, the Wasserstein distance is a distance between quantile functions $F^{-1}$, which can be extended to the case where the two samples do not have the same size.
 
 #### Wasserstein distance and optimal pairing
 
@@ -438,18 +438,18 @@ $$
 T_{0\to 1}^*\in\mathrm{argmin}\sum_{i=1}^{n}\big| T(z_{(0)}^{(i)})-z_{(0)}^{(i)}\big|^p
 $$
 
-where $T$ takes values in $\{z_1^{(1)},z_1^{(2)},...,z_1^{(n)}\}$, and $T$ is a one-to-one pairing. From Hardy-Littlewood-Polya inequality, when $p=2$, $T_{0\to 1}^*$ is a comonotonic paring, and should preserve the ranks : the $i$-th ranked observations should be matched together. In a nutshell, it comes from the convexity of the cost function, since
+where $T$ takes values in $\{z_1^{(1)},z_1^{(2)},...,z_1^{(n)}\}$, and $T$ is a one-to-one pairing. From Hardy-Littlewood-Polya inequality, when $p=2$, $T_{0\to 1}^*$ is a comonotonic pairing, and should preserve the ranks: the $i$-th ranked observations should be matched together. In a nutshell, it comes from the convexity of the cost function, since
 
 $$
 (z_{(1)}^{(i)}-z_{(0)}^{(i)})^2 + (z_{(1)}^{(j)}-z_{(0)}^{(j)})^2 \leq 
 (z_{(1)}^{(i)}-z_{(0)}^{(j)})^2 + (z_{(1)}^{(j)}-z_{(0)}^{(i)})^2 
 $$
 
-as soon as $i\neq j$. Observe that $T_{0\to 1}^*$ can also be written $T_{0\to 1}^*(\cdot)=\hat F_{1,n}^{-1}(\hat F_{0,n}(\cdot))$
+as soon as $i\neq j$. Observe that $T_{0\to 1}^*$ can also be written $T_{0\to 1}^*(\cdot)=\hat F_{1,n}^{-1}(\hat F_{0,n}(\cdot))$.
 
 #### Wasserstein barycenter
 
-One can also consider a third sample, defined a $\bar z^{(i)}=(z_{(0)}^{(i)}+z_{(1)}^{(i)})/2$. This is an ordered sample, in between the two. We can write
+One can also consider a third sample, defined as $\bar z^{(i)}=(z_{(0)}^{(i)}+z_{(1)}^{(i)})/2$. This is an ordered sample, in between the two. We can write
 
 $$
 \overline{z}^{(i)} 
@@ -461,7 +461,7 @@ $$
 
 Assuming $T_{1 \to 0}^*(\cdot) = \hat{F}_{0,n}^{-1}(\hat{F}_{1,n}(\cdot))$ and $T_{0 \to 1}^*(\cdot) = \hat{F}_{1,n}^{-1}(\hat{F}_{0,n}(\cdot))$, both expressions yield the same barycentric sample.
 
-## Optimal transport and Wasserstein distance 
+### Optimal transport and Wasserstein distance
 
 All those concepts can be formalized more generally. Let $Z$ be a quantity of interest. Let $\nu_0$ and $\nu_1$ be two laws of $Z$ (finite $p$-th moments, $p\ge1$).
 
@@ -505,10 +505,10 @@ $$
 
 source_python("___opt_transp.py")
 
-## now, the folder 'transported' exist, with one epsilon_y file per scenario
+## now, the folder 'transported' exists, with one epsilon_y file per scenario
 ```
 
-To predict corrective premium on other datasets, one can alternatively train a `lightgbm` model of mapping from $(X, D)$ to the resulting corrective premiums from `Equipy` on the training sample.
+To predict corrective premium on other datasets, one can alternatively train a `lightgbm` model of the mapping from $(X, D)$ to the resulting corrective premiums from `Equipy` on the training sample.
 
 ```{r mapping-to-corr}
 #| code-fold: true
@@ -531,9 +531,9 @@ The **hyperaware premium**, $\widehat{\mu}^H(\mathbf{x})$, is the best non-direc
 \end{equation*}  
 Since the response variable is a premium, MSE is a correct choice of loss function in most cases. Just as for the unaware premium, one can explicitly aggregate corrective premiums across protected groups using estimated propensities as weights. This is what we do here.
 
-## Visualization the estimated spectrum
+## Visualizing the estimated spectrum
 
-By combining all the trained models as component into a trained spectrum of fairness, we can define the premium function that will serve to predict the premiums
+By combining all the trained models as components into a trained spectrum of fairness, we can define the premium function that will serve to predict the premiums.
 
 ```{r premium-fn-def}
 #| code-fold: true
@@ -909,7 +909,7 @@ ggsave(filename = "figs/graph_pdx_perpop.png",
        device = "png", dpi = 500)
 ```
 
-![Estimated propensity in terms of $x_1$ and $x_2$ for simulations](figs/graph_pdx_perpop.png){#fig-prop_t width=100%}
+![Estimated propensity in terms of $x_1$ and $x_2$ for simulations](figs/graph_pdx_perpop.png){#fig-prop_est width=100%}
 
 ```{r BUA-graph-est}
 #| code-fold: true

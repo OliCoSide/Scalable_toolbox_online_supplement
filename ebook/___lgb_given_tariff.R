@@ -39,7 +39,7 @@ the_given_tarif_lightgbm_fun <- function(list_data, name){
                                       categorical_feature = categ_id)
   
   ## setup training, and train. Insert optimization of hyperparameters here.
-  ## Si tu utilises tweedie, il faut inclure le paramètres p quelque part ici. 
+  ## Si tu utilises tweedie, il faut inclure le paramètre p quelque part ici. 
   hyperparameters <- list(objective = 'mse',
                           learning_rate = 0.01,
                           bagging_fraction = 0.75,
@@ -105,7 +105,7 @@ the_given_tarif_lightgbm_fun <- function(list_data, name){
                 'valid' = vld_pred,
                 'test' = tst_pred)
   
-  ## If the folder do not exist... 
+  ## If the folder does not exist... 
   if (!dir.exists('preds')) dir.create('preds')
   
   ## save them preds

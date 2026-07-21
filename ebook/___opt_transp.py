@@ -89,10 +89,10 @@ def main():
     sims_valid = load_json_file(sample_paths["valid"])
     sims_test = load_json_file(sample_paths["test"])
 
-    # Process all scenarios and  labels using a loop
+    # Process all scenarios and labels using a loop
     for scenario_label, preds_path in preds_paths.items():
         # Split the scenario_label into scenario and selection_label
-        base_scenario = scenario_label.split('_')[0]  # Extract the base scenario (e.g., 'original', 'neutral')
+        base_scenario = scenario_label.split('_')[0]  # Extract the base scenario (e.g., 'Scenario1')
 
         # Load the predictions for this scenario
         preds = load_json_file(preds_path)
