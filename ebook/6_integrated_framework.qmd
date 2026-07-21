@@ -1,7 +1,7 @@
 ---
 output: html_document
-editor-options: 
-  chunk-output-type: console
+editor_options: 
+  chunk_output_type: console
 ---
 
 # Integrated framework {#sec-integrated}
@@ -10,7 +10,7 @@ editor-options:
 
 ## Objectives
 
-This section displays how the scalable toolbox may be combined into a comprehensive monitoring excel table. 
+This section displays how the scalable toolbox may be combined into a comprehensive monitoring Excel table. 
 
 :::
 
@@ -23,7 +23,7 @@ This section displays how the scalable toolbox may be combined into a comprehens
 library(tidyverse)
 library(latex2exp)
 library(jsonlite)
-library(partykit) # to predict the evtree from dictionnary
+library(partykit) # to predict the evtree from dictionary
 ```
 
 
@@ -679,7 +679,7 @@ summarize_fairness_table <- function(data, group_col, marg_dist,
   # Initialize list to hold all summaries
   all_summaries <- list()
   
-  # edit group_col. build multiple table : full, full-middle, pruned
+  # edit group_col. build multiple tables: full, full-middle, pruned
   
   #dictionnary_leaves_trees
   #dictionnary_leaves_trees_comm
@@ -963,7 +963,7 @@ export_to_excel <- function(summary_tables,
       } else {
         addStyle(
           wb, sheet_name, 
-          style = createStyle(fgFill = "white"),  # Light gray for even groups
+          style = createStyle(fgFill = "white"),  # White for odd groups
           rows = group_rows, 
           cols = 3:ncol(summary_table), 
           gridExpand = TRUE
@@ -1075,8 +1075,8 @@ export_to_excel <- function(summary_tables,
     
     # Auto-adjust column widths and set a smaller width for the first column
     setColWidths(wb, sheet_name, cols = 1, widths = 5)  # Smaller width for the Section column
-    setColWidths(wb, sheet_name, cols = 2, widths = 15)  # Smaller width for the Section column
-    setColWidths(wb, sheet_name, cols = 3, widths = 8)  # Smaller width for the Section column
+    setColWidths(wb, sheet_name, cols = 2, widths = 15)
+    setColWidths(wb, sheet_name, cols = 3, widths = 8)
     setColWidths(wb, sheet_name, cols = 4:ncol(summary_table), widths = 8)
     
     
@@ -1092,7 +1092,7 @@ export_to_excel <- function(summary_tables,
       fgFill = "grey90",     # Light grey background
       fontColour = "grey50", # Dark grey text
       wrapText = TRUE,       # Enable text wrapping
-      valign = "TOP",      # Center vertical alignment,
+      valign = "TOP",      # Top vertical alignment
       halign = 'LEFT',
       textDecoration = "Bold"
     )

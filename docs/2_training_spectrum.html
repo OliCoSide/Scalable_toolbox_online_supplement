@@ -4179,7 +4179,7 @@ window.Quarto = {
   <li><a href="#sec-est_aw" id="toc-sec-est_aw" class="nav-link" data-scroll-target="#sec-est_aw"><span class="header-section-number">2.3</span> Aware premium</a></li>
   <li><a href="#sec-est_corr" id="toc-sec-est_corr" class="nav-link" data-scroll-target="#sec-est_corr"><span class="header-section-number">2.4</span> Corrective premium</a></li>
   <li><a href="#hyperaware-premium" id="toc-hyperaware-premium" class="nav-link" data-scroll-target="#hyperaware-premium"><span class="header-section-number">2.6</span> Hyperaware premium</a></li>
-  <li><a href="#visualization-the-estimated-spectrum" id="toc-visualization-the-estimated-spectrum" class="nav-link" data-scroll-target="#visualization-the-estimated-spectrum"><span class="header-section-number">2.7</span> Visualization the estimated spectrum</a></li>
+  <li><a href="#visualization-the-estimated-spectrum" id="toc-visualization-the-estimated-spectrum" class="nav-link" data-scroll-target="#visualization-the-estimated-spectrum"><span class="header-section-number">2.7</span> Visualizing the estimated spectrum</a></li>
   </ul>
 </nav>
     </div>
@@ -4254,7 +4254,7 @@ document.addEventListener('scroll', () => {
 
 ">
 
-  <a href="https://www.casact.org/publications-research/publications/cas-papers/cas-working-papers" target="_blank" style="
+  <a href="https://www.casact.org/sites/default/files/2025-10/_A_Scalable_toolbox_working_paper.pdf" target="_blank" style="
 
     text-decoration: none;
 
@@ -4457,14 +4457,14 @@ Objectives
 <span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a>the_CAS_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">'#FED35D'</span>, <span class="st">'#F89708'</span>, <span class="st">'#205ED5'</span>, <span class="st">'#142345'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>In this section, we provide an example of detailed methodology for estimating the benchmarks premiums from the spectrum of fairness defined in Section 4.1 of the <strong>main paper</strong>. It complements the estimation of Section 4.1.</p>
-<p>In this paper, premiums are estimated using <code>lightgbm</code> algorithms from <span class="citation" data-cites="Ke/al:2017">Ke et al. (<a href="9_references.html#ref-Ke/al:2017" role="doc-biblioref">2017</a>)</span>, a package that supports common actuarial distributions (Tweedie, Poisson, Gamma, etc.) and was found to have excellent predictive performance compared to other boosting algorithm in <span class="citation" data-cites="Chevalier/al:2024">Chevalier and Côté (<a href="9_references.html#ref-Chevalier/al:2024" role="doc-biblioref">2024</a>)</span>. Given <code>lightgbm</code>’s flexibility, we advocate for careful variable preselection to:</p>
+<p>In this section, we provide an example of detailed methodology for estimating the benchmark premiums from the spectrum of fairness defined in Section 4.1 of the <strong>main paper</strong>. It complements the estimation of Section 4.3.</p>
+<p>In this paper, premiums are estimated using <code>lightgbm</code> algorithms from <span class="citation" data-cites="Ke/al:2017">Ke et al. (<a href="9_references.html#ref-Ke/al:2017" role="doc-biblioref">2017</a>)</span>, a package that supports common actuarial distributions (Tweedie, Poisson, Gamma, etc.) and was found to have excellent predictive performance compared to other boosting algorithms in <span class="citation" data-cites="Chevalier/al:2024">Chevalier and Côté (<a href="9_references.html#ref-Chevalier/al:2024" role="doc-biblioref">2024</a>)</span>. Given <code>lightgbm</code>’s flexibility, we advocate for careful variable preselection to:</p>
 <ul>
 <li>Ensure comprehensive coverage of risk factors,</li>
 <li>Reduce redundancy and potential multicollinearity while preserving predictive value.</li>
 </ul>
 <p>We optimize hyperparameters with a validation set to prevent overfitting. Key hyperparameters in <code>lightgbm</code> are the number of trees (<code>num_iterations</code>), regularization (<code>lambda_l1</code>, <code>lambda_l2</code>) for complexity control, and subsampling percentages (<code>feature_fraction</code>, <code>bagging_fraction</code>) .</p>
-<p>The data used to construct prices and the estimated spectrum should align to ensure comparability. In the Case Study of the <strong>main paper</strong>, we conduct a posteriori benchmarking, as the study period is historical. A posteriori assessment can reveal segments where the model misaligned from fairness dimensions after the fact. In contrast, conducting benchmarking concurrently with the development of a new pricing model provides an estimate of how well the commercial price aligns with fairness dimensions for future periods, though the true fairness implications of the commercial price will only become evident retrospectively.</p>
+<p>The data used to construct prices and the estimated spectrum should align to ensure comparability. In the Case Study of the <strong>main paper</strong>, we conduct a posteriori benchmarking, as the study period is historical. A posteriori assessment can reveal segments where the model was misaligned with fairness dimensions after the fact. In contrast, conducting benchmarking concurrently with the development of a new pricing model provides an estimate of how well the commercial price aligns with fairness dimensions for future periods, though the true fairness implications of the commercial price will only become evident retrospectively.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -4575,7 +4575,7 @@ Training time: 15.19205  sec. </code></pre>
 <span class="math display">\[\begin{equation*}  
     \widehat{\mu}^U(\mathbf{x}) = E\{\widehat{\mu}^B(\mathbf{x}, D) | X = \mathbf{x}\}.  
 \end{equation*}\]</span><br>
-This maintains consistency with the best estimate premium, whether <span class="math inline">\(\widehat{\mu}^B\)</span> is data-driven or based on indicated rates (Complement 5 of the <strong>main paper</strong>). One can use a to predict <span class="math inline">\(\widehat{\mu}^B(\mathbf{X}, D)\)</span> based on <span class="math inline">\(\mathbf{X}\)</span>. The loss function defaults to mean squared error as it is a reasonable distributional assumption for this response variable.</p>
+This maintains consistency with the best estimate premium, whether <span class="math inline">\(\widehat{\mu}^B\)</span> is data-driven or based on indicated rates (Complement 5 of the <strong>main paper</strong>). One can use a <code>lightgbm</code> model to predict <span class="math inline">\(\widehat{\mu}^B(\mathbf{X}, D)\)</span> based on <span class="math inline">\(\mathbf{X}\)</span>. The loss function defaults to mean squared error as it is a reasonable distributional assumption for this response variable.</p>
 <p>Alternatively (what we do), one can estimate the propensity and explicitly weight the best-estimate premiums based on predicted propensity. This also keeps consistency with the best-estimate.</p>
 <div class="cell">
 <details class="code-fold">
@@ -4644,10 +4644,10 @@ Training time: 35.43423  sec. </code></pre>
 </section>
 <section id="sec-est_aw" class="level2" data-number="2.3">
 <h2 data-number="2.3" class="anchored" data-anchor-id="sec-est_aw"><span class="header-section-number">2.3</span> Aware premium</h2>
-<p>The <strong>aware premium</strong>, <span class="math inline">\(\widehat{\mu}^A(\mathbf{x})\)</span>, requires knowledge of the marginal distribution of <span class="math inline">\(D\)</span>. The aware price, a particular case of the ``discrimination-free’’ price of <span class="citation" data-cites="Lindholm/al:2022">Lindholm et al. (<a href="9_references.html#ref-Lindholm/al:2022" role="doc-biblioref">2022</a>)</span>, is computed as:<br>
+<p>The <strong>aware premium</strong>, <span class="math inline">\(\widehat{\mu}^A(\mathbf{x})\)</span>, requires knowledge of the marginal distribution of <span class="math inline">\(D\)</span>. The aware price, a particular case of the “discrimination-free” price of <span class="citation" data-cites="Lindholm/al:2022">Lindholm et al. (<a href="9_references.html#ref-Lindholm/al:2022" role="doc-biblioref">2022</a>)</span>, is computed as:<br>
 <span class="math display">\[\begin{equation*}
     \widehat{\mu}^A(\mathbf{x}) = \sum_{d\in \mathcal{D}} \widehat{\mu}^B(\mathbf{x}, d) \widehat{\Pr}(D = d).
-\end{equation*}\]</span> As discussed earlier, we assume <span class="math inline">\(D\)</span> is discrete or discretized. If the training sample is representative of the target population (portfolio, market, or region?), empirical proportions are consistent estimators of <span class="math inline">\(\widehat{\Pr}(D = d)\)</span>. This is also an estimator suggested in Section 5 of <span class="citation" data-cites="Lindholm/al:2022">Lindholm et al. (<a href="9_references.html#ref-Lindholm/al:2022" role="doc-biblioref">2022</a>)</span>.</p>
+\end{equation*}\]</span> As discussed earlier, we assume <span class="math inline">\(D\)</span> is discrete or discretized. If the training sample is representative of the target population (portfolio, market, or region), empirical proportions are consistent estimators of <span class="math inline">\(\widehat{\Pr}(D = d)\)</span>. This is also an estimator suggested in Section 5 of <span class="citation" data-cites="Lindholm/al:2022">Lindholm et al. (<a href="9_references.html#ref-Lindholm/al:2022" role="doc-biblioref">2022</a>)</span>.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Computing the empirical proportions for protected supopulations</summary>
@@ -4685,7 +4685,7 @@ Note
 <div id="lst-fair_wasserstein" class="code-example listing quarto-float quarto-figure quarto-figure-left anchored">
 <figure class="quarto-float quarto-float-lst figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-lst" id="lst-fair_wasserstein-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Listing&nbsp;2.1: Illustrative Python code for wasserstein transport toward corrective premiums.
+Listing&nbsp;2.1: Illustrative Python code for Wasserstein transport toward corrective premiums.
 </figcaption>
 <div aria-describedby="lst-fair_wasserstein-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
@@ -4718,7 +4718,7 @@ Listing&nbsp;2.1: Illustrative Python code for wasserstein transport toward corr
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-Optimal transport and Wasserstein distance : technical details
+Optimal transport and Wasserstein distance: technical details
 </div>
 </div>
 <div class="callout-body-container callout-body">
@@ -4730,11 +4730,11 @@ Optimal transport and Wasserstein distance : technical details
 </section>
 <section id="comparing-two-samples-nonparametric-test" class="level4" data-number="2.4.1.2">
 <h4 data-number="2.4.1.2" class="anchored" data-anchor-id="comparing-two-samples-nonparametric-test"><span class="header-section-number">2.4.1.2</span> Comparing two samples (nonparametric test)</h4>
-<p>When you don’t want to assume a specific distribution, you can use nonparametric tests such as the Kolmogorov–Smirnov (KS) test or the Mann–Whitney U test.These tests compare the empirical distributions of the samples directly, essentially, how their cumulative distribution functions (CDFs) differ. This gives a more flexible notion of “difference”, but it doesn’t produce a continuous distance that tells how far apart the samples are.</p>
+<p>When you don’t want to assume a specific distribution, you can use nonparametric tests such as the Kolmogorov–Smirnov (KS) test or the Mann–Whitney U test. These tests compare the empirical distributions of the samples directly, essentially, how their cumulative distribution functions (CDFs) differ. This gives a more flexible notion of “difference”, but it doesn’t produce a continuous distance that tells how far apart the samples are.</p>
 </section>
 <section id="comparing-two-samples-with-wasserstein-distance" class="level4" data-number="2.4.1.3">
 <h4 data-number="2.4.1.3" class="anchored" data-anchor-id="comparing-two-samples-with-wasserstein-distance"><span class="header-section-number">2.4.1.3</span> Comparing two samples with Wasserstein distance</h4>
-<p>Optimal transport provides exactly that: a way to measure the distance between distributions. Suppose also that the two samples are ordered, <span class="math inline">\(z_0^{(i-1)}\leq z_0^{(i)},...,z_0^{(i+1)}\}\)</span> (and similarly in group <span class="math inline">\(1\)</span>), then Wasserstein distance is</p>
+<p>Optimal transport provides exactly that: a way to measure the distance between distributions. Suppose also that the two samples are ordered, <span class="math inline">\(z_0^{(i-1)}\leq z_0^{(i)},...,z_0^{(i+1)}\}\)</span> (and similarly in group <span class="math inline">\(1\)</span>), then the Wasserstein distance is</p>
 <p><span class="math display">\[
 \widehat W_p^p=\frac{1}{n}\sum_{i=1}^{n}\big| z_{(1)}^{(i)}-z_{(0)}^{(i)}\big|^p.
 \]</span></p>
@@ -4744,7 +4744,7 @@ Optimal transport and Wasserstein distance : technical details
 <p>If <span class="math inline">\(\hat F_{0,n}\)</span> and <span class="math inline">\(\hat F_{1,n}\)</span> denote the empirical cumulative distribution functions, <span class="math inline">\(z_{(1)}^{(i)}=\hat F_{1,n}^{-1}(i/n)\)</span> and <span class="math inline">\(z_{(0)}^{(i)}=\hat F_{0,n}^{-1}(i/n)\)</span>, so that</p>
 <p><span class="math display">\[
 \widehat W_p^p=\frac{1}{n}\sum_{i=1}^{n}\big| \hat F_{1,n}^{-1}(i/n)-\hat F_{0,n}^{-1}(i/n)\big|^p.
-\]</span> Thus, Wasserstein distance is a distance between quantile function <span class="math inline">\(F^{-1}\)</span>, that can be extended to the case where the two samples do not have the same size.</p>
+\]</span> Thus, the Wasserstein distance is a distance between quantile functions <span class="math inline">\(F^{-1}\)</span>, that can be extended to the case where the two samples do not have the same size.</p>
 </section>
 <section id="wasserstein-distance-and-optimal-pairing" class="level4" data-number="2.4.1.5">
 <h4 data-number="2.4.1.5" class="anchored" data-anchor-id="wasserstein-distance-and-optimal-pairing"><span class="header-section-number">2.4.1.5</span> Wasserstein distance and optimal pairing</h4>
@@ -4752,7 +4752,7 @@ Optimal transport and Wasserstein distance : technical details
 <p><span class="math display">\[
 T_{0\to 1}^*\in\mathrm{argmin}\sum_{i=1}^{n}\big| T(z_{(0)}^{(i)})-z_{(0)}^{(i)}\big|^p
 \]</span></p>
-<p>where <span class="math inline">\(T\)</span> takes values in <span class="math inline">\(\{z_1^{(1)},z_1^{(2)},...,z_1^{(n)}\}\)</span>, and <span class="math inline">\(T\)</span> is a one-to-one pairing. From Hardy-Littlewood-Polya inequality, when <span class="math inline">\(p=2\)</span>, <span class="math inline">\(T_{0\to 1}^*\)</span> is a comonotonic paring, and should preserve the ranks : the <span class="math inline">\(i\)</span>-th ranked observations should be matched together. In a nutshell, it comes from the convexity of the cost function, since</p>
+<p>where <span class="math inline">\(T\)</span> takes values in <span class="math inline">\(\{z_1^{(1)},z_1^{(2)},...,z_1^{(n)}\}\)</span>, and <span class="math inline">\(T\)</span> is a one-to-one pairing. From Hardy-Littlewood-Polya inequality, when <span class="math inline">\(p=2\)</span>, <span class="math inline">\(T_{0\to 1}^*\)</span> is a comonotonic pairing, and should preserve the ranks: the <span class="math inline">\(i\)</span>-th ranked observations should be matched together. In a nutshell, it comes from the convexity of the cost function, since</p>
 <p><span class="math display">\[
 (z_{(1)}^{(i)}-z_{(0)}^{(i)})^2 + (z_{(1)}^{(j)}-z_{(0)}^{(j)})^2 \leq
 (z_{(1)}^{(i)}-z_{(0)}^{(j)})^2 + (z_{(1)}^{(j)}-z_{(0)}^{(i)})^2
@@ -4801,10 +4801,10 @@ W_1(\nu_0,\nu_1)=\int_{0}^{1}\!\big|F^{-1}(u)-G^{-1}(u)\big|\,du
 <summary>Computing the optimal transport mapping for the scenarios</summary>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source_python</span>(<span class="st">"___opt_transp.py"</span>)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="do">## now, the folder 'transported' exist, with one epsilon_y file per scenario</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="do">## now, the folder 'transported' exists, with one epsilon_y file per scenario</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>To predict corrective premium on other datasets, one can alternatively train a <code>lightgbm</code> model of mapping from <span class="math inline">\((X, D)\)</span> to the resulting corrective premiums from <code>Equipy</code> on the training sample.</p>
+<p>To predict corrective premium on other datasets, one can alternatively train a <code>lightgbm</code> model of the mapping from <span class="math inline">\((X, D)\)</span> to the resulting corrective premiums from <code>Equipy</code> on the training sample.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Computing the optimal transport mapping for the scenarios</summary>
@@ -4838,8 +4838,8 @@ Lgb training : 33.47898  sec. </code></pre>
 Since the response variable is a premium, MSE is a correct choice of loss function in most cases. Just as for the unaware premium, one can explicitly aggregate corrective premiums across protected groups using estimated propensities as weights. This is what we do here.</p>
 </section>
 <section id="visualization-the-estimated-spectrum" class="level2" data-number="2.7">
-<h2 data-number="2.7" class="anchored" data-anchor-id="visualization-the-estimated-spectrum"><span class="header-section-number">2.7</span> Visualization the estimated spectrum</h2>
-<p>By combining all the trained models as component into a trained spectrum of fairness, we can define the premium function that will serve to predict the premiums</p>
+<h2 data-number="2.7" class="anchored" data-anchor-id="visualization-the-estimated-spectrum"><span class="header-section-number">2.7</span> Visualizing the estimated spectrum</h2>
+<p>By combining all the trained models as components into a trained spectrum of fairness, we can define the premium function that will serve to predict the premiums.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Defining the estimated premium and metrics functions</summary>

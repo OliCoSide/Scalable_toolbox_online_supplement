@@ -102,7 +102,7 @@ the_pdx_lightgbm_fun <- function(list_data, name, hyperparameter_grid){
                 'valid' = vld_pred,
                 'test' = tst_pred)
 
-  # ## If the folder do not exist...
+  # ## If the folder does not exist...
   # if (!dir.exists('preds')) dir.create('preds')
   #
   # ## clean, then save them preds

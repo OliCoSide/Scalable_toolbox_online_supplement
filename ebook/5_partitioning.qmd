@@ -1,7 +1,7 @@
 ---
 output: html_document
-editor-options: 
-  chunk-output-type: console
+editor_options: 
+  chunk_output_type: console
 ---
 
 # Partitioning {#sec-partition}
@@ -10,9 +10,9 @@ editor-options:
 
 ## Objectives
 
-In order to expose systemic disparities, section 6 of the **main paper** propose to partition policyholders following a relevant fairness local metric. In this section, we aim to perform partitioning of policyholders following proxy vulnerability (section 6.1 of the **main paper**). 
+In order to expose systemic disparities, section 6 of the **main paper** proposes to partition policyholders following a relevant fairness local metric. In this section, we aim to perform partitioning of policyholders following proxy vulnerability (section 6.1 of the **main paper**). 
 
-Furthermore, we perform an experiment on *Scenario 1* to see how effective is partitioning in identifying high proxy vulnerability policyholders. We gain insight on best practices for partitioning through this repeated partitioning experiment. 
+Furthermore, we perform an experiment on *Scenario 1* to see how effective partitioning is at identifying high proxy vulnerability policyholders. We gain insight into best practices for partitioning through this repeated partitioning experiment. 
 
 This section is based on simulations of @sec-simul-dataset and estimated metrics from @sec-local, and it will serve to build the integrated framework of @sec-integrated.
 
@@ -379,11 +379,12 @@ The partitioning methodology is introduced in **Section 6 of the main paper.**
 :::
 
 Five essential components guide supervised partitions:
-  - The **data** should represent the population for which fairness is intended, whether the full portfolio, a representative sample, or a specific subpopulation   - The **partitioning feature space** might include allowed and sensitive variables to reveal "minorities within minorities". Alternatively, focusing on permissible variables ensures future usability, even if sensitive attributes become inaccessible. 
+
+  - The **data** should represent the population for which fairness is intended, whether the full portfolio, a representative sample, or a specific subpopulation.
+  - The **partitioning feature space** might include allowed and sensitive variables to reveal "minorities within minorities". Alternatively, focusing on permissible variables ensures future usability, even if sensitive attributes become inaccessible. 
   - The **response variable** is the key fairness metric, such as fairness range or proxy vulnerability (Sec. 5 of the **main paper**), guiding the supervised partitioning. 
   - The **loss function** defines the partitioning objective: MSE targets average differences across segments, while quantile loss highlights the most at-risk individuals. 
   - The **algorithm** implements the partitioning. While CART is fast, it is only locally optimal. Advanced options like evolutionary trees (`evtree` in R; @grubinger/al:2014) or OSRT @Lin/al:2022_tree aim for global optimality while preserving tractability.
-\end{itemize}
 
 ## Partitioning policyholders following proxy vulnerability
 
@@ -396,7 +397,7 @@ Pre-pricing partitioning is illustrated in **Section 6.1 of the main paper**.
 
 We apply an optimal partitioning algorithm, `evtree`  from @grubinger/al:2014, to policyholders based on proxy vulnerability in the three scenarios of the example. We use $(X_1, X_2)$ as the feature space for partitioning and impose strong regularization to limit the number of groups.
 
-@fig-ex_partitioning_clusters presents the results for the three scenarios. The top row shows estimated proxy vulnerability, with colors indicating the groups resulting from the optimal partition of proxy vulnerability. While the left panel may not match intuition in terms of the number of groups in scenario 1, the predicted values of proxy vulnerability based on the evtree align with expectations: darker red indicates individuals most vulnerable to proxy effects. The bottom row of @fig-ex_partitioning_clusters depicts the partition in the $(x_1, x_2)$ domain. The structure aligns with the example design: high proxy vulnerability for individuals with $x_2 = 4$ and large $x_1$, and important variation in proxy vulnerability across $x_2$.
+@fig-ex_partitioning_clusters presents the results for the three scenarios. The top row shows estimated proxy vulnerability, with colors indicating the groups resulting from the optimal partition of proxy vulnerability. While the left panel may not match intuition in terms of the number of groups in scenario 1, the predicted values of proxy vulnerability based on the evtree align with expectations: darker red indicates individuals most vulnerable to proxy effects. The bottom row of @fig-ex_partitioning_clusters depicts the partition in the $(x_1, x_2)$ domain. The structure aligns with the example design: high proxy vulnerability for individuals with $x_2 = 4$ and large $x_1$, and substantial variation in proxy vulnerability across $x_2$.
 
 ```{r training-trees}
 #| code-fold: true
@@ -543,11 +544,11 @@ rm(temp_tree)
 
 ```
 
-### Saving important quantites
+### Saving important quantities
 
 ```{r saving-dict}
 #| code-fold: true
-#| code-summary: Saving dictionnaries of partition rules and predictions
+#| code-summary: Saving dictionaries of partition rules and predictions
 #| warning: false
 #| message: false
 dictionnary_leaves_trees <- setNames(nm = names(my_trees)) %>%  lapply(function(resp_tree){
@@ -796,18 +797,18 @@ ggpubr::ggarrange(g_proxy, g_population,
        device = "png", dpi = 500)
 ```
 
-![Partition of proxy vulnerability across the three scenarios (columns) in the example. The top row compares theoretical proxy vulnerability (black) with estimated values from the lightgbm, the latter colored by the group formed by the tree. The bottom row shows the partition in the $(x_1, x_2)$ domain, with noise added to~$x_2$ for clarity.](figs/graph_proxy_clusters_and_pop_scenario.png){#fig-ex_partitioning_clusters width=100%}
+![Partition of proxy vulnerability across the three scenarios (columns) in the example. The top row compares theoretical proxy vulnerability (black) with estimated values from the lightgbm model, the latter colored by the group formed by the tree. The bottom row shows the partition in the $(x_1, x_2)$ domain, with noise added to~$x_2$ for clarity.](figs/graph_proxy_clusters_and_pop_scenario.png){#fig-ex_partitioning_clusters width=100%}
 
 
-## Experiment on partioning proxy vulnerability for scenario 1
+## Experiment on partitioning proxy vulnerability for scenario 1
 
 
 To support the partitioning methodology proposed in section 6 of the **main paper**, we present a simulation study to identify best practices and gain insights into optimal implementation.  
 
-Following the set of equations of Scenario 1 in @sec-simul-dataset, we simulate $M = 100$ set of $N = 3000$ samples split into $(N_{\text{train}}, N_{\text{valid}}, N_{\text{test}}) = (2000, 500, 500)$ for train, validation, and test. Our aim is to assess the capacity of the methodology to recover proxy-vulnerable distinct subpopulations, precisely identify the most at-risk groups, and predict accurately the proxy vulnerability. We compute the BIC (under Gaussian assumption) of the estimated proxy vulnerability as compared with the test theoretical proxy vulnerability, and the accuracy in the partitioning as compared with the true proxy vulnerable groups : the eight subpopulations formed by the crossing of $\{X_1 \leq 1, X_1 > 1\}$ and $X_2 \in \{1, 2, 3, 4\}$. 
+Following the set of equations of Scenario 1 in @sec-simul-dataset, we simulate $M = 100$ sets of $N = 3000$ samples split into $(N_{\text{train}}, N_{\text{valid}}, N_{\text{test}}) = (2000, 500, 500)$ for train, validation, and test. Our aim is to assess the capacity of the methodology to recover proxy-vulnerable distinct subpopulations, precisely identify the most at-risk groups, and accurately predict the proxy vulnerability. We compute the BIC (under Gaussian assumption) of the estimated proxy vulnerability as compared with the test theoretical proxy vulnerability, and the accuracy in the partitioning as compared with the true proxy vulnerable groups: the eight subpopulations formed by the crossing of $\{X_1 \leq 1, X_1 > 1\}$ and $X_2 \in \{1, 2, 3, 4\}$. 
 
 
-On each sample set, we estimated unaware and aware premiums using the methodology described @sec-training and we computed proxy vulnerability $\widehat{\Delta}_{\text{proxy}}(x_1, x_2)$ via Eq. 1 of the **main paper**. We partitioned the feature space using $(X_1, X_2, D)$. Models used `rpart` (locally optimal) and `evtree` (globally optimal) regression trees, with hyperparameters tuned via validation BIC (Gaussian assumption): minimum leaf size proportion $w \in \{0.03, 0.05\}$, tree depth $d \in \{3, 4\}$, and  complexity parameter $\alpha \in \{1, 2\}$. For `rpart`, we pruned a deep tree to minimize validation error. We compared performance under fixed ($k = 8$) and optimized leaf counts, retaining the best model per case for each implementation (four total).  
+On each sample set, we estimated unaware and aware premiums using the methodology described in @sec-training and we computed proxy vulnerability $\widehat{\Delta}_{\text{proxy}}(x_1, x_2)$ via Eq. 1 of the **main paper**. We partitioned the feature space using $(X_1, X_2, D)$. Models used `rpart` (locally optimal) and `evtree` (globally optimal) regression trees, with hyperparameters tuned via validation BIC (Gaussian assumption): minimum leaf size proportion $w \in \{0.03, 0.05\}$, tree depth $d \in \{3, 4\}$, and  complexity parameter $\alpha \in \{1, 2\}$. For `rpart`, we pruned a deep tree to minimize validation error. We compared performance under fixed ($k = 8$) and optimized leaf counts, retaining the best model per case for each implementation (four total).  
 
 ```{r experiment-long}
 #| code-fold: true
@@ -834,7 +835,7 @@ if (!file.exists("preds/proxy_sims_results.csv")) {
 ```
 
 
-The following table presents the results of our experiment. When the number of groups is correctly set to $k = 8$, the $8\times8$ accuracy and relaxed $8\times8$ accuracy (which counts adjacent diagonals in the confusion matrix as correct) confirm that the method effectively groups individuals, with little difference between \texttt{rpart} and \texttt{evtree}. However, when $k$ is unknown, $k = 8$ was never seen as optimal. Validation metrics (based on estimated proxy vulnerability) favor larger $k$, while oracle performance (based on theoretical proxy vulnerability) suggests better $R^2$ at $k = 8$. Whether $k$ is known or not, partitioning identifies truly vulnerable individuals (top 12\% by theoretical proxy vulnerability) with over 93\% precision, fulfilling its primary objective. Since $k$ is unknown in practice, strong regularization is essential to prevent excessive partitioning.  
+The following table presents the results of our experiment. When the number of groups is correctly set to $k = 8$, the $8\times8$ accuracy and relaxed $8\times8$ accuracy (which counts adjacent diagonals in the confusion matrix as correct) confirm that the method effectively groups individuals, with little difference between `rpart` and `evtree`. However, when $k$ is unknown, $k = 8$ was never seen as optimal. Validation metrics (based on estimated proxy vulnerability) favor larger $k$, while oracle performance (based on theoretical proxy vulnerability) suggests better $R^2$ at $k = 8$. Whether $k$ is known or not, partitioning identifies truly vulnerable individuals (top 12\% by theoretical proxy vulnerability) with over 93\% precision, fulfilling its primary objective. Since $k$ is unknown in practice, strong regularization is essential to prevent excessive partitioning.  
 
 
 
@@ -1055,7 +1056,7 @@ group_lines <- c(5, 9)
 
 # Create table with custom header
 kbl(table_to_g |> dplyr::select(-group), col.names = NULL,
-    caption = "Results of experimental testing. For each of the $N = 100$ samples, we obtained the best regression trees when forcing $k = 8$ or when $k$ was part of the tuned hyperparameters.",
+    caption = "Results of experimental testing. For each of the $M = 100$ samples, we obtained the best regression trees when forcing $k = 8$ or when $k$ was part of the tuned hyperparameters.",
     label = "experiment") %>%
   add_header_above(c(
     "Metric" = 1,

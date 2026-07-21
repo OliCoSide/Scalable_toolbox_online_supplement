@@ -1,7 +1,7 @@
 ---
 output: html_document
-editor-options: 
-  chunk-output-type: console
+editor_options: 
+  chunk_output_type: console
 ---
 
 # Actuarial local metrics {#sec-local}
@@ -49,7 +49,7 @@ labels_for_premiums <- c("$\\widehat{\\mu}^B$","$\\widehat{\\mu}^U$", "$\\wideha
 the_CAS_colors <- c('#FED35D', '#F89708', '#205ED5', '#142345')
 ```
 
-## Pre pricing local metrics
+## Pre-pricing local metrics
 
 ::: {.column-margin}
 ::: {.related-box}
@@ -58,11 +58,11 @@ The pre-pricing local metrics are described in **Section 5.1 of the main paper**
 :::
 :::
 
-Pursuing our simple example with three scenarios, we can dissect proxy vulnerability using its two key components: the risk spread and propensity. With constant risk spread (scenario 1, top on @fig-proxy_dissect_t), the shape of proxy vulnerability depends solely on the propensity function. Scenario 1 yields eight distinct values of proxy vulnerability, as the constant risk spread limits variation to the eight possible values of propensity.
+Pursuing our simple example with three scenarios, we can dissect proxy vulnerability using its two key components: the risk spread and propensity. With constant risk spread (scenario 1, top of @fig-proxy_dissect_t), the shape of proxy vulnerability depends solely on the propensity function. Scenario 1 yields eight distinct values of proxy vulnerability, as the constant risk spread limits variation to the eight possible values of propensity.
 
 With a variable risk spread (scenario 2, middle of @fig-proxy_dissect_t), proxy vulnerability takes continuous values, even if the propensity has a finite number of values. As $X_1$ increases, the proxy vulnerability moves further away from zero. Its sign depends on whether $P(D = 1 \mid \mathbf{X} = \mathbf{x})$ exceeds its unconditional counterpart (which happens for $x_1 > 1$).
 
-In scenario 3, the propensity reveals that extreme values of $X_1$ -- both high and low -- can indicate membership in the sensitive group $D = 1$. However, this alone is insufficient to identify vulnerable subgroups. The proxy vulnerability bottom panel in @fig-proxy_dissect_t shows that large proxy vulnerability arises only for large $X_1$ values. For low $X_1$ values, while the model is capable of identifying protected subpopulations ($D$), the risk spread is too narrow to yield material proxy effects. Finally, large $X_1$ values paired with $X_2 = 1$ (solid yellow) gives a propensity of $D=1$ around 1/2, and thus no capacity to exploit the risk spread. This highlights the joint roles of risk spread and propensity in understanding proxy vulnerability. 
+In scenario 3, the propensity reveals that extreme values of $X_1$ -- both high and low -- can indicate membership in the sensitive group $D = 1$. However, this alone is insufficient to identify vulnerable subgroups. The proxy vulnerability bottom panel in @fig-proxy_dissect_t shows that large proxy vulnerability arises only for large $X_1$ values. For low $X_1$ values, while the model is capable of identifying protected subpopulations ($D$), the risk spread is too narrow to yield material proxy effects. Finally, large $X_1$ values paired with $X_2 = 1$ (solid yellow) give a propensity of $D=1$ around 1/2, and thus no capacity to exploit the risk spread. This highlights the joint roles of risk spread and propensity in understanding proxy vulnerability. 
 
 ```{r proxy-theo-viz}
 #| code-fold: true
@@ -160,7 +160,7 @@ ggsave(filename = "figs/graph_proxy_dissect_t_perpop.png",
 
 ![Risk spread (top left) and propensity (bottom left) are the components of the theoretical proxy vulnerability (right panel) for the three scenarios (vertical blocks) of the example.](figs/graph_proxy_dissect_t_perpop.png){#fig-proxy_dissect_t width=100%}
 
-@fig-proxy_dissect depicts the estimated version of @fig-proxy_dissect_t. Ignoring estimation variability, the findings remains. While the simplicity of the example setup makes it intuitive to visualize for which values of $(x_1, x_2)$ proxy vulnerability is the highest, the next @sec-partition will discuss how partitioning may help to uncover subpopulations with the highest proxy vulnerability.  
+@fig-proxy_dissect depicts the estimated version of @fig-proxy_dissect_t. Ignoring estimation variability, the findings remain. While the simplicity of the example setup makes it intuitive to visualize for which values of $(x_1, x_2)$ proxy vulnerability is the highest, the next @sec-partition will discuss how partitioning may help to uncover subpopulations with the highest proxy vulnerability.  
 
 ```{r proxy-est-viz}
 #| code-fold: true
@@ -256,9 +256,9 @@ ggsave(filename = "figs/graph_proxy_dissect_perpop.png",
 
 ```
 
-![Risk spread (top left) and propensity (bottom left) are the components of the estimated proxy vulnerability (right panel) for the three scenarios (vertical blocks) of the exampe.](figs/graph_proxy_dissect_perpop.png){#fig-proxy_dissect width=100%}
+![Risk spread (top left) and propensity (bottom left) are the components of the estimated proxy vulnerability (right panel) for the three scenarios (vertical blocks) of the example.](figs/graph_proxy_dissect_perpop.png){#fig-proxy_dissect width=100%}
 
-## Post pricing local metrics
+## Post-pricing local metrics
 
 ::: {.column-margin}
 ::: {.related-box}
@@ -267,15 +267,15 @@ The post-pricing local metrics are described in **Section 5.2 of the main paper.
 :::
 :::
 
-Given a commercial price, one may leverage the spectrum of fairness to better grasp the farness implication of the commercial price. We start by constructing a fictive commercial price to illustrate. 
+Given a commercial price, one may leverage the spectrum of fairness to better grasp the fairness implication of the commercial price. We start by constructing a fictitious commercial price to illustrate. 
 
-### Construction a ``given'' price for fairness evaluation
+### Constructing a "given" price for fairness evaluation
 
 To illustrate how fairness considerations interact with real-world ratemaking, we replicated realistic practical decisions. We assume no direct discrimination on $D$. We cap premiums for $X_1 > 6$ and group levels $X_2=1$ and $X_2=3$ due to low exposure for the former. We then train a `lightgbm` model to predict $Y$, forming the technical premiums. The commercial adjustments are targeted discounts of 15\% when $X_1 < 0$ and 10\% when $X_2 = 2$, reflecting pricing incentives for perceived lower-risk groups. Finally, the commercial price is globally rebalanced at the level of the best-estimate price. We end up with a pricing function $\pi(x_1, x_2)$ for which we want to assess fairness with respect to $D$. 
 
 ```{r computing-fictive-pricing}
 #| code-fold: true
-#| code-summary: Training the fictive pricing function
+#| code-summary: Training the fictitious pricing function
 #| warning: false
 #| message: false
 source('___lgb_given_tariff.R')
@@ -409,7 +409,7 @@ toJSON(pregroup_grid_stats, pretty = TRUE, auto_unbox = TRUE) %>% write('preds/p
 
 ### Commercial burden
 
-In @fig-comm_burden, we plot for scenario 3 the pricing function $\pi$ (solid line) in terms of $x_1$ and $x_2$ (panel), along with the corresponding aware premium (dashed line). The gap between the two is the commercial burden, which we highlight with the color scale. As expected for scenario 3, the individuals with $x_2 = 4$ and high values of $x_1$ bear the highest commercial burden despite the plateau for $x_2 > 6$. The discount introduced for $x_1 < 0$ does lower premiums, but implies a loading for $x_1>0$ (when balancing the rates), which further adds commercial burden for individuals on the right of the last panel of @fig-comm_burden, regardless of the insurer's intent.
+In @fig-comm_burden, we plot for scenario 3 the pricing function $\pi$ (solid line) in terms of $x_1$ and $x_2$ (panel), along with the corresponding aware premium (dashed line). The gap between the two is the commercial burden, which we highlight with the color scale. As expected for scenario 3, the individuals with $x_2 = 4$ and high values of $x_1$ bear the highest commercial burden despite the plateau for $x_1 > 6$. The discount introduced for $x_1 < 0$ does lower premiums, but implies a loading for $x_1>0$ (when balancing the rates), which further adds commercial burden for individuals on the right of the last panel of @fig-comm_burden, regardless of the insurer's intent.
 
 ```{r comm-burden-viz}
 #| code-fold: true
@@ -628,7 +628,7 @@ ggsave(filename = "figs/graph_giventariff_commload.png",
 
 ### Implied propensity
 
-In the top row of @fig-imp_prop, we depict the pricing function $\pi(x_1, x_2)$ (colored lines), the best-estimate premium $\mu^B(x_1, d)$ for $d=0$ (large solid gray) and $d=1$ (thin solid gray), and the aware premium $\mu^A(x_1)$ (dashed line). The colors correspond to grouped values of the implied propensity (section 5.2.2 of the **main article**), which is illustrated in the bottom row of @fig-imp_prop. We see in blue and red that the implied propensity is not bounded by $0$ and $1$, and highlights segments warranting attention.
+In the top row of @fig-imp_prop, we depict the pricing function $\pi(x_1, x_2)$ (colored lines), the best-estimate premium $\mu^B(x_1, d)$ for $d=0$ (thick solid gray) and $d=1$ (thin solid gray), and the aware premium $\mu^A(x_1)$ (dashed line). The colors correspond to grouped values of the implied propensity (section 5.2.2 of the **main article**), which is illustrated in the bottom row of @fig-imp_prop. We see in blue and red that the implied propensity is not bounded by $0$ and $1$, and highlights segments warranting attention.
     
 
 ```{r implied-prop-viz}
