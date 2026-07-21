@@ -4064,7 +4064,7 @@ document.addEventListener('scroll', () => {
 
 ">
 
-  <a href="https://www.casact.org/publications-research/publications/cas-papers/cas-working-papers" target="_blank" style="
+  <a href="https://www.casact.org/sites/default/files/2025-10/_A_Scalable_toolbox_working_paper.pdf" target="_blank" style="
 
     text-decoration: none;
 
@@ -4164,7 +4164,7 @@ Note
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Codes are written both in R and Python.</p>
+<p>Code is provided in both R and Python.</p>
 </div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -4177,8 +4177,8 @@ Scripts
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>The <i class="fa-brands fa-r-project" aria-label="r-project"></i> scripts associated with this ebook are available in the script folder on the GitHub repository of this paper:</p>
-<p><i class="fa-brands fa-github" aria-label="github"></i> <a href="https://github.com/olicoside/CAS_scalable_toolbox_suppl" class="uri">https://github.com/olicoside/CAS_scalable_toolbox_suppl</a></p>
+<p>The <i class="fa-brands fa-r-project" aria-label="r-project"></i> scripts associated with this ebook are available in the <code>ebook</code> folder of the GitHub repository for this supplement:</p>
+<p><i class="fa-brands fa-github" aria-label="github"></i> <a href="https://github.com/olicoside/Scalable_toolbox_online_supplement" class="uri">https://github.com/olicoside/Scalable_toolbox_online_supplement</a></p>
 </div>
 </div>
 <section id="executive-summary" class="level2">
@@ -4199,16 +4199,16 @@ Scripts
 <li>The <strong>unaware</strong> premium is the most accurate predictor of losses using all information except the sensitive variable,</li>
 <li>The <strong>aware</strong> premium is the most accurate predictor of losses when controlling for the sensitive variable,</li>
 <li>The <strong>corrective</strong> premium is the most accurate predictor that enforces similar premium distributions across levels of the sensitive variable,</li>
-<li>The <strong>hyperaware</strong> premium is the most accurate approximation of the corrective premium that does not directly discriminate on the sensitive variable,</li>
+<li>The <strong>hyperaware</strong> premium is the most accurate approximation of the corrective premium that does not directly discriminate on the sensitive variable.</li>
 </ul></li>
 <li>We define actuarially relevant local metrics that quantify the monetary impact of unfairness at the policyholder level.
 <ul>
 <li>Proxy vulnerability is the difference between unaware and aware premiums. It locally measures how much the allowed variables pick up the signal of a missing sensitive variable.</li>
 </ul></li>
-<li>We define post pricing local metrics to evaluate the fairness of any pricing structure relative to the estimated spectrum.</li>
+<li>We define post-pricing local metrics to evaluate the fairness of any pricing structure relative to the estimated spectrum.</li>
 <li>We partition policyholders to expose the segments in which unfair discrimination is most severe.</li>
-<li>We integrate these components into a fairness assessment framework that partitions the policyholders, pinpoints segments most affected by unfairness, and evaluates local metrics to diagnose unfairness and guide intervention..</li>
-<li>We illustrate our approach with a large case study inspired by industry practice. The analysis relies a real dataset of 768,000 vehicles insured in Québec (2016–2017), covering at-fault material damage claims. We examine the fairness of a pseudo commercial price with respect to discretized credit score: low (vulnerable group) vs high. This sensitive variable measures the policyholder’s economic precariousness.
+<li>We integrate these components into a fairness assessment framework that partitions the policyholders, pinpoints segments most affected by unfairness, and evaluates local metrics to diagnose unfairness and guide intervention.</li>
+<li>We illustrate our approach with a large case study inspired by industry practice. The analysis relies on a real dataset of 768,000 vehicles insured in Québec (2016–2017), covering at-fault material damage claims. We examine the fairness of a pseudo commercial price with respect to discretized credit score: low (vulnerable group) vs high. This sensitive variable measures the policyholder’s economic precariousness.
 <ul>
 <li>Proxy vulnerability is both material and skewed: while most policyholders may receive a modest rebate, a vulnerable minority of them could face 15–30% overpricing if the regulation only requires that the sensitive variable be omitted,</li>
 <li>Our integrated framework (<a href="6_integrated_framework.html" class="quarto-xref"><span>6&nbsp; Integrated framework</span></a>) illustrates that fairness in insurance pricing can be assessed efficiently, with minimal analyst effort. The framework provides simultaneous diagnostics from the three fairness dimensions, translates unfairness into dollar terms at the individual level, and highlights disparities across population segments.</li>
@@ -4216,7 +4216,7 @@ Scripts
 <li>We provide additional information and the complete code illustrated on a comprehensive simulated data example in this online supplement.</li>
 </ul>
 <p>Designed for routine portfolio monitoring, our toolbox delivers valuable insights whether or not the sensitive attribute is included in pricing, provided it is available for assessment. The toolbox’s scalability, across large datasets and rich covariate sets, makes fairness operationalizable for actuaries: intuitive, practical, and encompassing the three fairness dimensions.</p>
-<p><strong>Keywords</strong>: Dimensions of fairness; Practical benchmarking; Systematic disparity detection; Comprehensive framework; Operationalizable fairness;</p>
+<p><strong>Keywords</strong>: Dimensions of fairness; Practical benchmarking; Systematic disparity detection; Comprehensive framework; Operationalizable fairness</p>
 </section>
 <section id="outline" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="outline">Outline</h2>
@@ -4224,8 +4224,8 @@ Scripts
 <ul>
 <li><a href="1_simul_dataset.html" class="quarto-xref"><span>1&nbsp; Example setup and simulations</span></a>: Defines the three scenarios and their simulation setup.</li>
 <li><a href="2_training_spectrum.html" class="quarto-xref"><span>2&nbsp; Estimating the five fairness premiums</span></a>: Describes how to estimate the premium spectrum from simulated data.</li>
-<li><a href="4_dimensions.html" class="quarto-xref"><span>4&nbsp; Measuring the dimensions of fairness</span></a>: Measures and visualizes the three fairness dimensions.</li>
 <li><a href="3_local.html" class="quarto-xref"><span>3&nbsp; Actuarial local metrics</span></a>: Derives pre- and post-pricing fairness metrics, including proxy vulnerability.</li>
+<li><a href="4_dimensions.html" class="quarto-xref"><span>4&nbsp; Measuring the dimensions of fairness</span></a>: Measures and visualizes the three fairness dimensions.</li>
 <li><a href="5_partitioning.html" class="quarto-xref"><span>5&nbsp; Partitioning</span></a>: Identifies systemic unfairness via partitioning, with repeated experiments.</li>
 <li><a href="6_integrated_framework.html" class="quarto-xref"><span>6&nbsp; Integrated framework</span></a>: Presents a unified approach for fairness assessment and monitoring.</li>
 </ul>

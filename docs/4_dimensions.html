@@ -6691,7 +6691,7 @@ window.Quarto = {
   <li><a href="#measuring-solidarity-disparities" id="toc-measuring-solidarity-disparities" class="nav-link" data-scroll-target="#measuring-solidarity-disparities"><span class="header-section-number">4.2</span> Measuring solidarity disparities</a></li>
   <li><a href="#measuring-proxy-disparities" id="toc-measuring-proxy-disparities" class="nav-link" data-scroll-target="#measuring-proxy-disparities"><span class="header-section-number">4.3</span> Measuring proxy disparities</a></li>
   <li><a href="#disparity-measurement-per-dimension" id="toc-disparity-measurement-per-dimension" class="nav-link" data-scroll-target="#disparity-measurement-per-dimension"><span class="header-section-number">4.4</span> Disparity measurement per dimension</a></li>
-  <li><a href="#vizualization-of-alignment-with-dimensions" id="toc-vizualization-of-alignment-with-dimensions" class="nav-link" data-scroll-target="#vizualization-of-alignment-with-dimensions"><span class="header-section-number">4.5</span> Vizualization of alignment with dimensions</a></li>
+  <li><a href="#vizualization-of-alignment-with-dimensions" id="toc-vizualization-of-alignment-with-dimensions" class="nav-link" data-scroll-target="#vizualization-of-alignment-with-dimensions"><span class="header-section-number">4.5</span> Visualization of alignment with dimensions</a></li>
   </ul>
 </nav>
     </div>
@@ -6766,7 +6766,7 @@ document.addEventListener('scroll', () => {
 
 ">
 
-  <a href="https://www.casact.org/publications-research/publications/cas-papers/cas-working-papers" target="_blank" style="
+  <a href="https://www.casact.org/sites/default/files/2025-10/_A_Scalable_toolbox_working_paper.pdf" target="_blank" style="
 
     text-decoration: none;
 
@@ -6869,7 +6869,7 @@ Objectives
 <span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>In the case study of the <strong>main paper</strong>, we briefly discuss how we quantified disparities using the wasserstein distance. We briefly discuss technical limitations in the measurement of the different disparities regarding the three dimensions of fairness: <em>actuarial fairness</em>, <em>solidarity</em>, and <em>causality</em>.</p>
+<p>In the case study of the <strong>main paper</strong>, we briefly discuss how we quantified disparities using the Wasserstein distance. We briefly discuss technical limitations in the measurement of the different disparities regarding the three dimensions of fairness: <em>actuarial fairness</em>, <em>solidarity</em>, and <em>causality</em>.</p>
 
 <div class="no-row-height column-margin column-container"><div class="">
 <div class="related-box">
@@ -6882,9 +6882,9 @@ The dimensions of fairness are described in <strong>Section 3 of the main paper.
 <div class="no-row-height column-margin column-container"><div class="">
 <div class="related-box">
 <p><strong>Related section</strong><br>
-The measurement associated with the dimensions of fairness are described in <strong>Section 4.3 of the main paper.</strong></p>
+The measurements associated with the dimensions of fairness are described in <strong>Section 4.3 of the main paper.</strong></p>
 </div>
-</div></div><p>Actuarial fairness concerns differences in expected loss ratios. Disparity implies cross-subsidies; a violation of actuarial fairness. We compute individual loss ratios as</p>
+</div></div><p>Actuarial fairness concerns differences in expected loss ratios. Disparity implies cross-subsidies, a violation of actuarial fairness. We compute individual loss ratios as</p>
 <p><span class="math display">\[
 LR_i = Y_i / \text{premium}_i.
 \]</span></p>
@@ -6897,7 +6897,7 @@ LR_i = Y_i / \text{premium}_i.
 </section>
 <section id="measuring-proxy-disparities" class="level2" data-number="4.3">
 <h2 data-number="4.3" class="anchored" data-anchor-id="measuring-proxy-disparities"><span class="header-section-number">4.3</span> Measuring proxy disparities</h2>
-<p>To assess proxy disparity, we take inspiration from <span class="citation" data-cites="Lindholm/al:2024">Lindholm et al. (<a href="9_references.html#ref-Lindholm/al:2024" role="doc-biblioref">2024</a>)</span> by measuring individual ``proxy effects’’. Following <span class="citation" data-cites="SelectionBias_2024">Côté, Côté, and Charpentier (<a href="9_references.html#ref-SelectionBias_2024" role="doc-biblioref">2024</a>)</span>, we measure proxy effects as the difference between a given premium and the aware premium. We then compare their distributions across protected groups. This aligns with the <em>proxy parity</em> criterion of <span class="citation" data-cites="SelectionBias_2024">Côté, Côté, and Charpentier (<a href="9_references.html#ref-SelectionBias_2024" role="doc-biblioref">2024</a>)</span>. Implictly, we assume that our estimate of the aware premium is unbiased, otherwise proxy effect assessment may be highly unreliable.</p>
+<p>To assess proxy disparity, we take inspiration from <span class="citation" data-cites="Lindholm/al:2024">Lindholm et al. (<a href="9_references.html#ref-Lindholm/al:2024" role="doc-biblioref">2024</a>)</span> by measuring individual “proxy effects”. Following <span class="citation" data-cites="SelectionBias_2024">Côté, Côté, and Charpentier (<a href="9_references.html#ref-SelectionBias_2024" role="doc-biblioref">2024</a>)</span>, we measure proxy effects as the difference between a given premium and the aware premium. We then compare their distributions across protected groups. This aligns with the <em>proxy parity</em> criterion of <span class="citation" data-cites="SelectionBias_2024">Côté, Côté, and Charpentier (<a href="9_references.html#ref-SelectionBias_2024" role="doc-biblioref">2024</a>)</span>. Implicitly, we assume that our estimate of the aware premium is unbiased, otherwise proxy effect assessment may be highly unreliable.</p>
 </section>
 <section id="disparity-measurement-per-dimension" class="level2" data-number="4.4">
 <h2 data-number="4.4" class="anchored" data-anchor-id="disparity-measurement-per-dimension"><span class="header-section-number">4.4</span> Disparity measurement per dimension</h2>
@@ -7059,7 +7059,7 @@ LR_i = Y_i / \text{premium}_i.
 </div>
 </section>
 <section id="vizualization-of-alignment-with-dimensions" class="level2" data-number="4.5">
-<h2 data-number="4.5" class="anchored" data-anchor-id="vizualization-of-alignment-with-dimensions"><span class="header-section-number">4.5</span> Vizualization of alignment with dimensions</h2>
+<h2 data-number="4.5" class="anchored" data-anchor-id="vizualization-of-alignment-with-dimensions"><span class="header-section-number">4.5</span> Visualization of alignment with dimensions</h2>
 <p>Next, we visualize premium alignment across fairness dimensions. We first standardize the measurements for comparability, then reverse their direction so that higher values indicate better alignment.</p>
 <div class="cell">
 <details class="code-fold">
