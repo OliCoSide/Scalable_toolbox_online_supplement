@@ -6,7 +6,7 @@ Code and reproducible examples for the CAS working paper by
 [Arthur Charpentier](https://orcid.org/0000-0003-3654-6286).
 
 - **Read the supplement:** <https://olicoside.github.io/Scalable_toolbox_online_supplement/>
-- **Read the paper:** [CAS working paper (PDF)](https://www.casact.org/sites/default/files/2025-10/_A_Scalable_toolbox_working_paper.pdf)
+- **Read the paper:** [CAS working paper (PDF)](https://www.casact.org/sites/default/files/2026-03/Scalable_Toolbox_for_Exposing_Indirect_Discrimination_Research_Paper.pdf)
 
 ## What is here
 
