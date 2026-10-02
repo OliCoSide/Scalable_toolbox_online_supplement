@@ -1,0 +1,80 @@
+<style>
+#progress-bar {
+  height: 4px;
+  background: #004A8D;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  width: 0%;
+  transition: width 0.2s ease-out;
+}
+#cas-paper-card {
+  box-sizing: border-box;
+  position: fixed;
+  top: 450px;
+  left: 0;
+  z-index: 1000;
+  width: 12.5rem;
+  max-width: 12.5rem;
+  margin: 0;
+  padding: 0.65rem 0.75rem 0.7rem 0.7rem;
+  background: #fdfdfd;
+  border: 1px solid #e6e6e6;
+  border-left: none;
+  border-radius: 0 12px 12px 0;
+  box-shadow: 4px 4px 10px rgba(20, 35, 69, 0.08);
+  font-size: 0.85em;
+  font-family: 'Helvetica Neue', sans-serif;
+}
+#cas-paper-card a {
+  text-decoration: none;
+  color: #142345;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+#cas-paper-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fdfdfd;
+}
+@media (max-width: 991.98px) {
+  #cas-paper-card {
+    position: static;
+    width: auto;
+    max-width: 16rem;
+    margin: 0.5rem 0 1rem;
+    border-left: 1px solid #e6e6e6;
+    border-radius: 12px;
+  }
+}
+.callout:hover { transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  #progress-bar { transition: none; }
+  body { animation: none !important; opacity: 1 !important; }
+  .callout { animation: none !important; transition: none !important; transform: none !important; }
+}
+</style>
+
+<script>
+document.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+  const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+  const bar = document.getElementById('progress-bar');
+  if (bar) bar.style.width = progress + '%';
+});
+</script>
+
+<div id="progress-bar"></div>
+
+<div id="cas-paper-card">
+  <a href="https://forum.casact.org/article/163838-a-scalable-toolbox-for-exposing-indirect-discrimination-in-insurance-rates" target="_blank" rel="noopener">
+    <img src="img/logo_cas.png" alt="Casualty Actuarial Society" />
+    Open main paper
+  </a>
+</div>
