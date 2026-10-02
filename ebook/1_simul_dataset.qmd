@@ -734,7 +734,7 @@ ggsave(filename = "figs/graph_premiumsdense_BUA_t_perpop.png",
 ::: {.column-margin}
 ::: {.related-box}
 **Related section**  
-The five families of the Spectrum of fairness are described in **Section 4.2 of the main paper**
+The five families of the Spectrum of fairness are described in **Section 4.1 of the main paper**
 :::
 :::
 

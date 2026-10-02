@@ -628,7 +628,7 @@ ggsave(filename = "figs/graph_giventariff_commload.png",
 
 ### Implied propensity
 
-In the top row of @fig-imp_prop, we depict the pricing function $\pi(x_1, x_2)$ (colored lines), the best-estimate premium $\mu^B(x_1, d)$ for $d=0$ (thick solid gray) and $d=1$ (thin solid gray), and the aware premium $\mu^A(x_1)$ (dashed line). The colors correspond to grouped values of the implied propensity (section 5.2.2 of the **main article**), which is illustrated in the bottom row of @fig-imp_prop. We see in blue and red that the implied propensity is not bounded by $0$ and $1$, and highlights segments warranting attention.
+In the top row of @fig-imp_prop, we depict the pricing function $\pi(x_1, x_2)$ (colored lines), the best-estimate premium $\mu^B(x_1, d)$ for $d=0$ (thick solid gray) and $d=1$ (thin solid gray), and the aware premium $\mu^A(x_1)$ (dashed line). The colors correspond to grouped values of the implied propensity (section 5.2.2 of the **main paper**), which is illustrated in the bottom row of @fig-imp_prop. We see in blue and red that the implied propensity is not bounded by $0$ and $1$, and highlights segments warranting attention.
     
 
 ```{r implied-prop-viz}
