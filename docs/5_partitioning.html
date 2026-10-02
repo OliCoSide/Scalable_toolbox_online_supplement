@@ -4887,7 +4887,7 @@ The partitioning methodology is introduced in <strong>Section 6 of the main pape
 <li>The <strong>partitioning feature space</strong> might include allowed and sensitive variables to reveal “minorities within minorities”. Alternatively, focusing on permissible variables ensures future usability, even if sensitive attributes become inaccessible.</li>
 <li>The <strong>response variable</strong> is the key fairness metric, such as fairness range or proxy vulnerability (Sec. 5 of the <strong>main paper</strong>), guiding the supervised partitioning.</li>
 <li>The <strong>loss function</strong> defines the partitioning objective: MSE targets average differences across segments, while quantile loss highlights the most at-risk individuals.</li>
-<li>The <strong>algorithm</strong> implements the partitioning. While CART is fast, it is only locally optimal. Advanced options like evolutionary trees (<code>evtree</code> in R; <span class="citation" data-cites="grubinger/al:2014">Grubinger, Zeileis, and Pfeiffer (<a href="9_references.html#ref-grubinger/al:2014" role="doc-biblioref">2014</a>)</span>) or OSRT <span class="citation" data-cites="Lin/al:2022_tree">Lin et al. (<a href="9_references.html#ref-Lin/al:2022_tree" role="doc-biblioref">2022</a>)</span> aim for global optimality while preserving tractability.</li>
+<li>The <strong>algorithm</strong> implements the partitioning. While CART is fast, it is only locally optimal. Advanced options like evolutionary trees (<code>evtree</code> in R; <span class="citation" data-cites="grubinger/al:2014">Grubinger, Zeileis, and Pfeiffer (<a href="9_references.html#ref-grubinger/al:2014" role="doc-biblioref">2014</a>)</span>) or OSRT <span class="citation" data-cites="Lin/al:2022_tree">Lin et al. (<a href="9_references.html#ref-Lin/al:2022_tree" role="doc-biblioref">2020</a>)</span> aim for global optimality while preserving tractability.</li>
 </ul>
 </section>
 <section id="partitioning-policyholders-following-proxy-vulnerability" class="level2 page-columns page-full" data-number="5.2">
@@ -5772,7 +5772,7 @@ Figure&nbsp;5.1: Partition of proxy vulnerability across the three scenarios (co
 Grubinger, Thomas, Achim Zeileis, and Karl-Peter Pfeiffer. 2014. <span>“Evtree: Evolutionary Learning of Globally Optimal Classification and Regression Trees in r.”</span> <em>Journal of Statistical Software</em> 61 (1): 1–29. <a href="https://doi.org/10.18637/jss.v061.i01">https://doi.org/10.18637/jss.v061.i01</a>.
 </div>
 <div id="ref-Lin/al:2022_tree" class="csl-entry" role="listitem">
-Lin, Jimmy, Chudi Zhong, Diane Hu, Cynthia Rudin, and Margo Seltzer. 2022. <span>“Generalized and Scalable Optimal Sparse Decision Trees.”</span> <em>arXiv Preprint</em> <a href="https://arxiv.org/abs/2006.08690">arXiv:2006.08690</a>. <a href="https://arxiv.org/abs/2006.08690">https://arxiv.org/abs/2006.08690</a>.
+Lin, Jimmy, Chudi Zhong, Diane Hu, Cynthia Rudin, and Margo Seltzer. 2020. <span>“Generalized and Scalable Optimal Sparse Decision Trees.”</span> <em>Proceedings of the 37th International Conference on Machine Learning</em> 119: 6150–60. <a href="https://proceedings.mlr.press/v119/lin20g.html">https://proceedings.mlr.press/v119/lin20g.html</a>.
 </div>
 </div>
 </section>
