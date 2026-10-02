@@ -10,7 +10,7 @@ editor_options:
 
 ## Objectives
 
-This section displays how the scalable toolbox may be combined into a comprehensive monitoring Excel table. 
+This section combines the premium spectrum, the local metrics, and the policyholder partitions into one monitoring table per scenario. The Excel workbooks summarize, in dollars and in people, where proxy vulnerability and commercial loading concentrate. 
 
 :::
 
